@@ -1,0 +1,60 @@
+# Go
+/bin/
+/dist/
+*.exe
+*.test
+*.out
+*.prof
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Stray root-built binaries (go build ./cmd/... without -o bin/)
+/cios
+/cios-*
+/speccheck
+/cardinality-bench
+
+# Node / web
+node_modules/
+web/**/build/
+web/**/.react-router/
+
+# Python bytecode
+__pycache__/
+**/__pycache__/
+*.py[cod]
+
+# Local secrets / env
+/deploy/edge/.env
+*.pem
+*.key
+
+# Local run + evidence artifacts (regenerable; never committed)
+/artifacts/
+/graphify-out/
+/.graphify_root
+/tmp/
+/.portal-live-logs/
+/.portal-live-pids/
+/.m0-*.log
+/.m1-*.log
+/.m2-*.log
+
+# --- AI agent / internal authoring material: never commit to the public repo ---
+CLAUDE.md
+GEMINI.md
+AGENTS.md
+.claude/
+.cursor/
+.cursorrules
+.github/copilot-instructions.md
+.aider*
+/prompts/
+/archive/
+/docs/tmp/
+/docs/dis/
+/docs/archive/
+/docs/proposals/

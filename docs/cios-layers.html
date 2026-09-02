@@ -1,0 +1,852 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>CIOS — Six-layer Architecture v7</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;450;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* CIOS six-layer map v7 — rack dossier; fill = completion % (code-aligned 2026-07-16) */
+  :root {
+    --paper: #F1ECDD; --paper-2: #E8E1CC; --paper-3: #DED5BC;
+    --ink: #11151C; --ink-2: #3B424E; --ink-3: #6F7785;
+    --rule: #1A1F27; --rule-2: #C9C0A4;
+    --open: #2E6B4F; --open-ink: #1A3F2D; --open-bg: rgba(46,107,79,0.07);
+    --closed: #A33A2A; --closed-ink: #5C1E14; --closed-bg: rgba(163,58,42,0.06);
+    --mid: #C8923A; --mid-ink: #5A3F12;
+    --tier-infra: #4A6B85; --tier-platform: #C8923A; --tier-app: #A33A2A;
+    --console: #161B22; --console-2: #0E1218;
+  }
+  * { box-sizing: border-box; }
+  ::selection { background: var(--ink); color: var(--paper); }
+  html, body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    font-size: 15px; line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background-image: radial-gradient(circle at 1px 1px, rgba(17,21,28,0.04) 1px, transparent 0);
+    background-size: 4px 4px; opacity: 0.5;
+  }
+  .sheet { position: relative; z-index: 1; max-width: 1180px; margin: 0 auto; padding: 32px 44px 80px; }
+
+  /* masthead */
+  .masthead {
+    display: grid; grid-template-columns: 1fr auto; align-items: end;
+    padding-bottom: 12px; border-bottom: 1.5px solid var(--ink); margin-bottom: 20px;
+  }
+  .doc-id { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); }
+  .doc-title { font-family: 'Fraunces', Georgia, serif; font-size: 15px; color: var(--ink-2); margin-top: 4px; }
+  .meta { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-2); text-align: right; line-height: 1.6; }
+
+  /* console */
+  .console {
+    background: linear-gradient(180deg, var(--console) 0%, var(--console-2) 100%);
+    color: #E8E4D4; border: 1.5px solid var(--ink); margin-bottom: 28px;
+  }
+  .c-row { display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 0; }
+  .c-cell { padding: 16px 18px; border-right: 1px solid rgba(255,255,255,0.08); }
+  .c-cell:last-child { border-right: 0; }
+  .c-eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: rgba(232,228,212,0.55); margin-bottom: 8px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .blink {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--open);
+    box-shadow: 0 0 6px var(--open); animation: pulse 1.6s ease-in-out infinite;
+  }
+  @keyframes pulse { 50% { opacity: 0.35; } }
+  .c-num {
+    font-family: 'Fraunces', Georgia, serif; font-size: 28px; font-weight: 500;
+    color: #F1ECDD; line-height: 1.1; margin-bottom: 8px;
+  }
+  .c-num .unit { font-size: 13px; color: rgba(241,236,221,0.5); margin-left: 4px; font-family: 'Inter', sans-serif; font-weight: 400; }
+  .c-desc { font-size: 12px; color: rgba(232,228,212,0.72); line-height: 1.5; }
+  .c-desc code { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: #E8D5A3; }
+  .c-bar { display: flex; height: 6px; margin-top: 12px; background: rgba(255,255,255,0.06); overflow: hidden; }
+  .c-bar > span { display: block; height: 100%; }
+
+  /* hero */
+  .hero {
+    display: grid; grid-template-columns: 1.45fr 1fr; gap: 48px;
+    padding: 4px 0 28px; align-items: end;
+  }
+  .hero h1 {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 400; font-size: 48px;
+    line-height: 1.05; letter-spacing: -0.02em; margin: 0 0 16px 0;
+  }
+  .hero h1 em { font-style: italic; color: var(--ink-2); }
+  .hero h1 .stroke { font-weight: 600; }
+  .lede {
+    font-family: 'Fraunces', Georgia, serif; font-size: 16px; line-height: 1.55;
+    color: var(--ink-2); max-width: 52ch; margin: 0 0 16px 0;
+  }
+  .lede strong { color: var(--ink); font-weight: 500; }
+  .flow {
+    display: flex; border: 1.2px solid var(--ink); background: var(--paper-2);
+    font-family: 'JetBrains Mono', monospace; font-size: 10px;
+  }
+  .flow .fcell {
+    flex: 1; padding: 8px 10px; text-align: center; letter-spacing: 0.08em;
+    text-transform: uppercase; font-weight: 600; border-right: 1px solid var(--ink);
+  }
+  .flow .fcell:last-child { border-right: 0; }
+  .flow .arr { color: var(--mid); margin-right: 4px; }
+
+  .status-card { background: var(--paper-2); border: 1.5px solid var(--ink); }
+  .sc-head {
+    padding: 10px 14px; border-bottom: 1.2px solid var(--ink); background: var(--paper);
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--ink-2);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .leds { display: flex; gap: 5px; }
+  .leds span { width: 7px; height: 7px; border-radius: 50%; background: var(--open); box-shadow: 0 0 4px var(--open); }
+  .leds span:nth-child(2) { background: var(--mid); box-shadow: 0 0 4px var(--mid); }
+  .leds span:nth-child(3) { background: var(--closed); box-shadow: 0 0 4px var(--closed); }
+  .sc-body { padding: 16px; }
+  .sc-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
+  .lbl {
+    font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-3); margin-bottom: 3px;
+  }
+  .val { font-family: 'Fraunces', Georgia, serif; font-size: 18px; font-weight: 500; }
+  .val .sub { font-size: 11px; color: var(--ink-3); font-family: 'Inter', sans-serif; font-weight: 400; margin-left: 2px; }
+  .sc-divider { height: 1px; background: var(--rule-2); margin: 12px 0; }
+  .sc-note {
+    font-family: 'Fraunces', Georgia, serif; font-style: italic; font-size: 12.5px;
+    color: var(--ink-2); line-height: 1.5;
+  }
+  .sc-note::before { content: '“'; color: var(--mid); font-size: 16px; margin-right: 1px; }
+  .sc-note::after  { content: '”'; color: var(--mid); font-size: 16px; }
+
+  /* milestone bar */
+  .ms-bar {
+    display: flex; border: 1.5px solid var(--ink); background: var(--paper-2);
+    font-family: 'JetBrains Mono', monospace; margin: 0 0 16px 0;
+  }
+  .ms-lbl {
+    padding: 10px 12px; font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-2); border-right: 1.5px solid var(--ink); background: var(--paper);
+    display: flex; align-items: center;
+  }
+  .ms-step {
+    flex: 1; padding: 10px 10px; text-align: center; border-right: 1px solid var(--rule-2);
+  }
+  .ms-step:last-child { border-right: 0; }
+  .ms-name { display: block; font-size: 11px; font-weight: 600; color: var(--ink); margin-bottom: 2px; }
+  .ms-sub { display: block; font-size: 9.5px; color: var(--ink-3); letter-spacing: 0.04em; }
+  .ms-step.done .ms-name { color: var(--open-ink); }
+  .ms-step.done .ms-sub { color: var(--open); }
+  .ms-step.current { background: var(--ink); }
+  .ms-step.current .ms-name { color: var(--paper); }
+  .ms-step.current .ms-sub { color: rgba(241,236,221,0.55); }
+
+  /* legend */
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center;
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-2);
+    margin: 0 0 28px 0; padding: 10px 14px; border: 1px solid var(--rule-2); background: var(--paper-2);
+  }
+  .legend strong { color: var(--ink); font-weight: 600; }
+  .legend .sw {
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .legend .dot {
+    width: 10px; height: 10px; border-radius: 2px; border: 1px solid var(--ink);
+  }
+  .legend .dot.oss { background: var(--open); border-color: var(--open-ink); }
+  .legend .dot.com { background: var(--closed); border-color: var(--closed-ink); }
+  .legend .dot.fill {
+    background: linear-gradient(90deg, transparent 30%, var(--open) 30%);
+  }
+  .legend .tag {
+    font-size: 9px; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 1px 5px; border: 1px solid var(--ink-3); color: var(--ink-2);
+  }
+  .legend .tag.shipped { border-color: var(--open); color: var(--open-ink); background: var(--open-bg); }
+  .legend .tag.mvp { border-color: var(--mid); color: var(--mid-ink); background: rgba(200,146,58,0.1); }
+  .legend .tag.gated { border-color: var(--ink-3); color: var(--ink-3); border-style: dashed; }
+  .legend .tag.parked { border-color: var(--closed); color: var(--closed-ink); background: var(--closed-bg); }
+
+  /* sections */
+  .sec {
+    display: flex; justify-content: space-between; align-items: baseline;
+    border-bottom: 1.5px solid var(--ink); padding: 28px 0 8px; margin: 8px 0 18px;
+  }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em;
+    text-transform: uppercase; color: var(--ink-2);
+  }
+  .sec h2 {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: 24px;
+    margin: 4px 0 0; letter-spacing: -0.01em;
+  }
+  .sec h2 em { font-style: italic; color: var(--ink-2); }
+  .sec .right {
+    font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--ink-2);
+    text-align: right; letter-spacing: 0.08em; text-transform: uppercase; line-height: 1.5;
+  }
+
+  /* stack */
+  .stack {
+    display: flex; flex-direction: column-reverse;
+    border: 1.5px solid var(--ink); background: var(--paper-2);
+  }
+  .unit {
+    display: grid; grid-template-columns: 128px 1fr;
+    border-top: 3px solid var(--ink); background: var(--paper); position: relative;
+  }
+  .stack > .unit:first-child { border-top: 0; }
+  .unit::before {
+    content: ''; position: absolute; top: 0; left: 128px; right: 0; height: 4px;
+    background: var(--tier-platform); z-index: 2;
+  }
+  .unit[data-tier="infra"]::before { background: var(--tier-infra); }
+  .unit[data-tier="platform"]::before { background: var(--tier-platform); }
+  .unit[data-tier="app"]::before { background: var(--tier-app); }
+
+  .rail {
+    background: var(--ink); color: #fff; padding: 16px 12px 16px 16px;
+    border-right: 3px solid var(--ink); display: flex; flex-direction: column; justify-content: center;
+    position: relative;
+  }
+  .rail::before, .rail::after {
+    content: ''; position: absolute; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--paper-3); box-shadow: inset 0 0 0 1px rgba(0,0,0,0.3);
+  }
+  .rail::before { top: 6px; left: 6px; }
+  .rail::after { bottom: 6px; left: 6px; }
+  .r-num { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.45); letter-spacing: 0.14em; }
+  .r-name { font-family: 'Fraunces', Georgia, serif; font-size: 20px; font-weight: 500; line-height: 1.05; margin-top: 2px; }
+  .r-en { font-size: 10.5px; color: rgba(255,255,255,0.5); margin-top: 4px; }
+  .r-tag {
+    display: inline-block; margin-top: 10px; align-self: flex-start;
+    font-family: 'JetBrains Mono', monospace; font-size: 8.5px; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 2px 6px; background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.65);
+  }
+
+  .bay { display: grid; grid-template-rows: auto auto; }
+  .slot {
+    padding: 12px 16px 12px 18px; border-bottom: 1px dashed var(--ink);
+    display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: start;
+  }
+  .slot:last-child { border-bottom: 0; }
+  .slot.open { background: var(--open-bg); }
+  .slot.closed { background: var(--closed-bg); }
+  .slot.empty.open { background: repeating-linear-gradient(45deg, var(--open-bg) 0 8px, transparent 8px 14px); }
+  .slot.empty.closed { background: repeating-linear-gradient(45deg, var(--closed-bg) 0 8px, transparent 8px 14px); }
+  .s-head {
+    display: flex; align-items: center; gap: 6px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em;
+    text-transform: uppercase; font-weight: 600;
+  }
+  .slot.open .s-head { color: var(--open); }
+  .slot.closed .s-head { color: var(--closed); }
+  .led { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .slot.open .led { background: var(--open); box-shadow: 0 0 4px var(--open); }
+  .slot.closed .led { background: var(--closed); border: 1px solid var(--closed-ink); }
+  .s-count { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; color: var(--ink-3); margin-top: 4px; }
+  .empty-msg {
+    font-family: 'Fraunces', Georgia, serif; font-style: italic; font-size: 12.5px; color: var(--ink-3);
+  }
+  .mods { display: flex; flex-wrap: wrap; gap: 5px; }
+  .desc-list {
+    font-family: 'JetBrains Mono', monospace; font-size: 10.5px; color: var(--ink-2);
+    line-height: 1.65; margin-top: 6px;
+  }
+
+  /* chips — fill = completion % */
+  .chip {
+    display: inline-flex; align-items: center; height: 24px;
+    border: 1px solid var(--ink); font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    color: var(--ink); line-height: 1;
+    background: linear-gradient(90deg,
+      transparent 0%,
+      transparent calc(100% - var(--fill, 0%)),
+      var(--open) calc(100% - var(--fill, 0%)),
+      var(--open) 100%);
+  }
+  .chip.open { border-color: var(--open-ink); }
+  .chip.closed {
+    border-color: var(--closed-ink);
+    background: linear-gradient(90deg,
+      transparent 0%,
+      transparent calc(100% - var(--fill, 0%)),
+      rgba(163,58,42,0.35) calc(100% - var(--fill, 0%)),
+      rgba(163,58,42,0.35) 100%);
+  }
+  .chip .ms {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 30px; height: 100%; padding: 0 4px; font-size: 9px; font-weight: 700;
+    letter-spacing: 0.04em; border-right: 1px solid currentColor;
+  }
+  .chip.open .ms { color: var(--open-ink); background: rgba(46,107,79,0.12); }
+  .chip.open[style*="--fill:100%"] .ms { color: var(--paper); background: var(--open); }
+  .chip.closed .ms { color: var(--closed-ink); background: rgba(163,58,42,0.1); }
+  .chip.closed[style*="--fill:100%"] .ms { color: var(--paper); background: var(--closed); }
+  .chip .nm { padding: 0 8px; white-space: nowrap; }
+  .chip .st {
+    font-size: 8.5px; letter-spacing: 0.06em; text-transform: uppercase;
+    padding: 0 6px; height: 100%; display: inline-flex; align-items: center;
+    border-left: 1px solid rgba(17,21,28,0.15); color: var(--ink-2); background: rgba(241,236,221,0.55);
+  }
+  .chip .st.shipped { color: var(--open-ink); }
+  .chip .st.mvp { color: var(--mid-ink); }
+  .chip .st.gated { color: var(--ink-3); font-style: italic; }
+  .chip .st.parked { color: var(--closed-ink); }
+  .chip .st.future { color: var(--ink-3); }
+
+  .proto-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .proto {
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; padding: 2px 7px;
+    border: 1px solid var(--open-ink); color: var(--open-ink); background: var(--open-bg);
+  }
+  .proto.future {
+    border: 1px dashed var(--ink-3); color: var(--ink-3); background: transparent;
+  }
+  .proto.mvp {
+    border-color: var(--mid); color: var(--mid-ink); background: rgba(200,146,58,0.1);
+  }
+
+  /* topology */
+  .topo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .topo-card { border: 1.2px solid var(--ink); background: var(--paper); padding: 14px 16px; }
+  .t-tag { display: flex; justify-content: space-between; margin-bottom: 8px; }
+  .t-layer { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-3); }
+  .t-ms { font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 700; color: var(--open-ink); }
+  .topo-card h3 {
+    font-family: 'Fraunces', Georgia, serif; font-size: 15px; font-weight: 500; margin: 0 0 10px;
+  }
+  .topo-card h3 code { font-family: 'JetBrains Mono', monospace; font-size: 12px; background: var(--paper-2); padding: 1px 4px; }
+  .topo-tree { font-family: 'JetBrains Mono', monospace; font-size: 11.5px; line-height: 1.7; color: var(--ink-2); }
+  .topo-tree .root { color: var(--ink); font-weight: 600; }
+  .topo-tree .leaf { color: var(--ink-2); }
+  .topo-tree .note { color: var(--ink-3); margin-left: 6px; font-size: 10.5px; }
+  .t-note { margin-top: 10px; font-size: 11.5px; color: var(--ink-3); line-height: 1.45; }
+  .t-note code { font-family: 'JetBrains Mono', monospace; font-size: 10.5px; }
+
+  /* doc footer */
+  .doc-foot {
+    margin-top: 40px; padding-top: 16px; border-top: 1.5px solid var(--ink);
+    display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+    font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink-2); line-height: 1.7;
+  }
+  .doc-foot a { color: var(--open-ink); text-decoration: none; border-bottom: 1px solid rgba(46,107,79,0.3); }
+  .doc-foot a:hover { border-bottom-color: var(--open); }
+  .doc-foot h4 {
+    font-family: 'Fraunces', Georgia, serif; font-size: 14px; font-weight: 500;
+    color: var(--ink); margin: 0 0 6px; letter-spacing: 0;
+  }
+
+  @media (max-width: 900px) {
+    .sheet { padding: 20px 16px 48px; }
+    .hero { grid-template-columns: 1fr; gap: 20px; }
+    .c-row { grid-template-columns: 1fr 1fr; }
+    .c-cell { border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .unit { grid-template-columns: 1fr; }
+    .rail { flex-direction: row; align-items: center; gap: 12px; padding: 12px 14px; }
+    .r-tag { margin-top: 0; margin-left: auto; }
+    .slot { grid-template-columns: 1fr; }
+    .topo-grid { grid-template-columns: 1fr; }
+    .ms-bar { flex-wrap: wrap; }
+    .ms-lbl { width: 100%; border-right: 0; border-bottom: 1.5px solid var(--ink); }
+    .doc-foot { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 34px; }
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <header class="masthead">
+    <div>
+      <div class="doc-id">DOC · CIOS / Architecture v7 / 2026-07-16</div>
+      <div class="doc-title">Codebase-aligned layer map — fill = completion %; OSS vs Commercial per OSS-MANIFEST.</div>
+    </div>
+    <div class="meta">
+      Source · protocol + main tree<br>
+      Locked decisions L1–L110<br>
+      Status · live engineering snapshot
+    </div>
+  </header>
+
+  <section class="console" aria-label="System state 2026-07-16">
+    <div class="c-row">
+      <div class="c-cell">
+        <div class="c-eyebrow"><span class="blink"></span>System Status</div>
+        <div class="c-num">M4<span class="unit">/ closed · L110</span></div>
+        <div class="c-desc">
+          <strong>M0–M1 closed</strong> · <strong>M2 ~95%</strong> (ops OS; soak optional) ·
+          <strong>M3 A-track closed</strong> (Usage OSS, dual portals, lab twin) ·
+          <strong>M4 CLOSED (L110, 2026-07-16)</strong> per trimmed gates — review F1–F4 fixed,
+          F5 ruled (CI autoflow off); non-closeout gates (data-window PdM, arbitrage,
+          Commercial B, GPU) stay open.
+          Authority: <code>PROJECT-STATUS.md</code> · <code>M4-CODE-REVIEW-2026-07-16.md</code> ·
+          <code>DECISION-2026-07-16-gate-closeout.md</code>.
+        </div>
+        <div class="c-bar" aria-hidden="true">
+          <span style="width:20%; background: var(--open); box-shadow: 0 0 4px var(--open);"></span>
+          <span style="width:20%; background: var(--open);"></span>
+          <span style="width:19%; background: var(--open);"></span>
+          <span style="width:20%; background: var(--open);"></span>
+          <span style="width:21%; background: var(--open); box-shadow: 0 0 4px var(--open);"></span>
+        </div>
+      </div>
+      <div class="c-cell">
+        <div class="c-eyebrow">License</div>
+        <div class="c-num">Open<span class="unit">-core</span></div>
+        <div class="c-desc">L1/L2 + Usage = Apache-2.0. Twin / Capacity / Tenant / AI Ops = Commercial. Map: <code>OSS-MANIFEST.md</code>.</div>
+      </div>
+      <div class="c-cell">
+        <div class="c-eyebrow">Planes</div>
+        <div class="c-num">Edge<span class="unit"> live</span></div>
+        <div class="c-desc">Site compose shipped. Fleet plane (E3.7) gated — placeholder only. See <code>docs/product/</code>.</div>
+      </div>
+      <div class="c-cell">
+        <div class="c-eyebrow">External waits</div>
+        <div class="c-num">3<span class="unit"> gates</span></div>
+        <div class="c-desc">GPU/DCGM hardware · hybrid-chiller data · first customer onboarding.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="hero">
+    <div>
+      <h1><span class="stroke">Six layers</span>, <em>honest</em><br>about what <span class="stroke">ships</span>.</h1>
+      <p class="lede">
+        CIOS is an open-core stack for AI compute MDCs: drivers and telemetry at the bottom,
+        domain graph and fleet in the middle, business + AI Ops at the top.
+        Each unit splits <strong>Open Source</strong> / <strong>Commercial</strong>.
+        Chip fill is <strong>completion %</strong> against code on <code>main</code> — not a planning slot.
+      </p>
+      <div class="flow" aria-label="Read bottom to top">
+        <span class="fcell"><span class="arr">▲</span>L6 AI Ops</span>
+        <span class="fcell"><span class="arr">▲</span>L5 Business</span>
+        <span class="fcell"><span class="arr">▲</span>L4 Fleet</span>
+        <span class="fcell"><span class="arr">▲</span>L3 Domain</span>
+        <span class="fcell"><span class="arr">▲</span>L2 Telemetry</span>
+        <span class="fcell"><span class="arr">▲</span>L1 Driver</span>
+      </div>
+    </div>
+    <aside class="status-card">
+      <div class="sc-head">
+        <span>How to read chips</span>
+        <div class="leds"><span></span><span></span><span></span></div>
+      </div>
+      <div class="sc-body">
+        <div class="sc-row">
+          <div>
+            <div class="lbl">Fill bar</div>
+            <div class="val">Done %<span class="sub">code</span></div>
+          </div>
+          <div>
+            <div class="lbl">Border</div>
+            <div class="val">OSS / Com</div>
+          </div>
+          <div>
+            <div class="lbl">Left tag</div>
+            <div class="val">Origin<span class="sub">Mx</span></div>
+          </div>
+          <div>
+            <div class="lbl">Right tag</div>
+            <div class="val">State</div>
+          </div>
+        </div>
+        <div class="sc-divider"></div>
+        <div class="sc-note">
+          Milestone closed ≠ every future protocol done. MQTT/Redfish/DCGM stay future.
+          M1 closed means exit criteria, not “all L1 chips forever.”
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <div class="ms-bar" aria-label="Milestones">
+    <span class="ms-lbl">Milestone</span>
+    <span class="ms-step done">
+      <span class="ms-name">M0 · Foundation</span>
+      <span class="ms-sub">Shipped</span>
+    </span>
+    <span class="ms-step done">
+      <span class="ms-name">M1 · Digital Twin</span>
+      <span class="ms-sub">Closed</span>
+    </span>
+    <span class="ms-step done">
+      <span class="ms-name">M2 · Operations</span>
+      <span class="ms-sub">~95% · soak open</span>
+    </span>
+    <span class="ms-step done">
+      <span class="ms-name">M3 · Business</span>
+      <span class="ms-sub">A-track closed</span>
+    </span>
+    <span class="ms-step done">
+      <span class="ms-name">M4 · Autonomous</span>
+      <span class="ms-sub">Closed (L110 · trimmed gates)</span>
+    </span>
+  </div>
+
+  <div class="legend" aria-label="Legend">
+    <span class="sw"><span class="dot oss"></span> <strong>OSS</strong> border (Apache-2.0 default)</span>
+    <span class="sw"><span class="dot com"></span> <strong>Commercial</strong> border</span>
+    <span class="sw"><span class="dot fill"></span> <strong>Fill</strong> = completion % on main</span>
+    <span><span class="tag shipped">shipped</span> production-usable path</span>
+    <span><span class="tag mvp">mvp</span> code in tree, not full product</span>
+    <span><span class="tag gated">gated</span> blocked on scale / hardware / decision</span>
+    <span><span class="tag parked">parked</span> deliberately frozen</span>
+  </div>
+
+  <!-- ═══ stack ═══ -->
+  <div class="sec">
+    <div>
+      <div class="eyebrow">§01 · Stack</div>
+      <h2>Six layers, <em>rack-mounted</em></h2>
+    </div>
+    <div class="right">L1 bottom · L6 top<br>Open / Commercial slots</div>
+  </div>
+
+  <div class="stack">
+
+    <!-- L1 -->
+    <div class="unit" data-tier="infra">
+      <div class="rail">
+        <div class="r-num">UNIT L1</div>
+        <div class="r-name">Driver</div>
+        <div class="r-en">Talk device protocol</div>
+        <span class="r-tag">Infrastructure</span>
+      </div>
+      <div class="bay">
+        <div class="slot open">
+          <div class="s-label">
+            <div class="s-head"><span class="led"></span>Open Source</div>
+            <div class="s-count">4 shipped</div>
+          </div>
+          <div>
+            <div class="mods">
+              <span class="chip open" style="--fill:100%"><span class="ms">M0</span><span class="nm">Modbus TCP driver</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M0</span><span class="nm">Modbus simulator</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M1</span><span class="nm">SNMP v2c driver</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M1</span><span class="nm">SNMP simulator</span><span class="st shipped">shipped</span></span>
+            </div>
+            <div class="desc-list">pkg/driver/{modbus,snmp} · cmd/cios-modbus-driver · cmd/cios-*-sim · L60–L62 Collect/Write/LastSuccess</div>
+            <div class="proto-row">
+              <span class="proto">Modbus TCP</span>
+              <span class="proto">SNMP v2c</span>
+              <span class="proto future">MQTT · later</span>
+              <span class="proto future">Redfish · later</span>
+              <span class="proto future">IPMI · later</span>
+              <span class="proto future">DCGM · GPU gate</span>
+            </div>
+          </div>
+        </div>
+        <div class="slot closed empty">
+          <div class="s-label">
+            <div class="s-head"><span class="led"></span>Commercial</div>
+            <div class="s-count">0</div>
+          </div>
+          <div class="empty-msg">No commercial modules in L1. Drivers stay OSS.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- L2 -->
+    <div class="unit" data-tier="infra">
+      <div class="rail">
+        <div class="r-num">UNIT L2</div>
+        <div class="r-name">Telemetry</div>
+        <div class="r-en">Normalize, publish, alarm</div>
+        <span class="r-tag">Infrastructure</span>
+      </div>
+      <div class="bay">
+        <div class="slot open">
+          <div class="s-label">
+            <div class="s-head"><span class="led"></span>Open Source</div>
+            <div class="s-count">8 shipped</div>
+          </div>
+          <div>
+            <div class="mods">
+              <span class="chip open" style="--fill:100%"><span class="ms">M0</span><span class="nm">Gateway collection loop</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M0</span><span class="nm">pkg/promproj</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M0</span><span class="nm">NATS JetStream pub</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M0</span><span class="nm">cios-edge-writer → VM</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M0</span><span class="nm">protocol + cpath + pointmap</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M1</span><span class="nm">Alarm engine (pkg/alarm)</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M1</span><span class="nm">promtext wire shape</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M1</span><span class="nm">CloudEvents envelope</span><span class="st shipped">shipped</span></span>
+            </div>
+            <div class="desc-list">L23 single projection · L66 alarm self-comparator on NATS (not PromQL) · deploy/edge/rules/* facility rules</div>
+          </div>
+        </div>
+        <div class="slot closed empty">
+          <div class="s-label">
+            <div class="s-head"><span class="led"></span>Commercial</div>
+            <div class="s-count">0</div>
+          </div>
+          <div class="empty-msg">No commercial modules in L2. Telemetry path stays OSS.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- L3 -->
+    <div class="unit" data-tier="platform">
+      <div class="rail">
+        <div class="r-num">UNIT L3</div>
+        <div class="r-name">Domain</div>
+        <div class="r-en">Asset model · ops · twin</div>
+        <span class="r-tag">Platform</span>
+      </div>
+      <div class="bay">
+        <div class="slot open">
+          <div class="s-label">
+            <div class="s-head"><span class="led"></span>Open Source</div>
+            <div class="s-count">11 shipped</div>
+          </div>
+          <div>
+            <div class="mods">
+              <span class="chip open" style="--fill:100%"><span class="ms">M0</span><span class="nm">types.yaml / dictionaries</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M0</span><span class="nm">spec-001 relations</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M0</span><span class="nm">pkg/cpath · pointmap</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M0</span><span class="nm">tools/speccheck</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M1</span><span class="nm">cios-core site API</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M1</span><span class="nm">Query / Set + risk_class</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M1</span><span class="nm">cios-rules + site vmalert</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M2</span><span class="nm">Tickets · PM · inspection · spares</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M2</span><span class="nm">Ops reports · maintenance window</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M3</span><span class="nm">Usage measurement (L102)</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M0</span><span class="nm">Grafana edge dashboards</span><span class="st shipped">shipped</span></span>
+            </div>
+            <div class="desc-list">Site plane ops domain on cios-core · Usage is OSS (not “billing”) · L67/L68 rules split · control-e2e live</div>
+          </div>
+        </div>
+        <div class="slot closed">
+          <div class="s-label">
+            <div class="s-head"><span class="led"></span>Commercial</div>
+            <div class="s-count">3 modules</div>
+          </div>
+          <div>
+            <div class="mods">
+              <span class="chip closed" style="--fill:85%"><span class="ms">M3</span><span class="nm">Digital Twin Renderer</span><span class="st mvp">mvp</span></span>
+              <span class="chip closed" style="--fill:90%"><span class="ms">M2</span><span class="nm">Capacity Engine + forecast</span><span class="st shipped">shipped</span></span>
+              <span class="chip closed" style="--fill:0%"><span class="ms">—</span><span class="nm">Alarm Intelligence (RCA)</span><span class="st gated">no code</span></span>
+            </div>
+            <div class="desc-list">
+              Twin: scene-engine · usdlint · sceneprune · /api/twins · NOC 3D · USD packs (lab Blender path; Kit/PhyX deferred).
+              Capacity: core/capacity* + 30/90d forecast in reports/portal. Alarm-intel product still empty.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- L4 -->
+    <div class="unit" data-tier="platform">
+      <div class="rail">
+        <div class="r-num">UNIT L4</div>
+        <div class="r-name">Fleet</div>
+        <div class="r-en">Multi-site plane</div>
+        <span class="r-tag">Platform</span>
+      </div>
+      <div class="bay">
+        <div class="slot open">
+          <div class="s-label">
+            <div class="s-head"><span class="led"></span>Open Source</div>
+            <div class="s-count">edge live · fleet 0</div>
+          </div>
+          <div>
+            <div class="mods">
+              <span class="chip open" style="--fill:100%"><span class="ms">M0</span><span class="nm">Edge site stack (compose)</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M3</span><span class="nm">ops-portal · customer-portal</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M3</span><span class="nm">cios-apigw /api proxy</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:0%"><span class="ms">E3.7</span><span class="nm">fleet-ingest</span><span class="st gated">gated</span></span>
+              <span class="chip open" style="--fill:0%"><span class="ms">E3.7</span><span class="nm">fleet-api</span><span class="st gated">gated</span></span>
+              <span class="chip open" style="--fill:0%"><span class="ms">E3.7</span><span class="nm">fleet-registry</span><span class="st gated">gated</span></span>
+            </div>
+            <div class="desc-list">
+              Site experience is live; multi-site Fleet Plane is not implemented (fleet/ placeholder).
+              Gate: scale T3 · P671 · docs/product/fleet.md
+            </div>
+          </div>
+        </div>
+        <div class="slot closed empty">
+          <div class="s-label">
+            <div class="s-head"><span class="led"></span>Commercial</div>
+            <div class="s-count">0 planned as L4 blob</div>
+          </div>
+          <div class="empty-msg">No L4-only commercial family. Tenant lives in L5; twin UI in L3.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- L5 -->
+    <div class="unit" data-tier="app">
+      <div class="rail">
+        <div class="r-num">UNIT L5</div>
+        <div class="r-name">Business</div>
+        <div class="r-en">Tenant · commercial B</div>
+        <span class="r-tag">Application</span>
+      </div>
+      <div class="bay">
+        <div class="slot open">
+          <div class="s-label">
+            <div class="s-head"><span class="led"></span>Open Source</div>
+            <div class="s-count">1 domain</div>
+          </div>
+          <div>
+            <div class="mods">
+              <span class="chip open" style="--fill:100%"><span class="ms">M3</span><span class="nm">Usage domain (measure · rollup · export)</span><span class="st shipped">shipped</span></span>
+              <span class="chip open" style="--fill:100%"><span class="ms">M3</span><span class="nm">Customer portal Usage surface</span><span class="st shipped">shipped</span></span>
+            </div>
+            <div class="desc-list">L102: Measurement + Usage = OSS platform. Not Pricing. Not invoice/tax/AR.</div>
+          </div>
+        </div>
+        <div class="slot closed">
+          <div class="s-label">
+            <div class="s-head"><span class="led"></span>Commercial</div>
+            <div class="s-count">1 live · 4 parked</div>
+          </div>
+          <div>
+            <div class="mods">
+              <span class="chip closed" style="--fill:90%"><span class="ms">M3</span><span class="nm">Tenant / Org / STS / CRN</span><span class="st shipped">shipped</span></span>
+              <span class="chip closed" style="--fill:0%"><span class="ms">B</span><span class="nm">Pricing / RatePlan</span><span class="st parked">parked</span></span>
+              <span class="chip closed" style="--fill:0%"><span class="ms">B</span><span class="nm">Cost engine</span><span class="st parked">parked</span></span>
+              <span class="chip closed" style="--fill:0%"><span class="ms">B</span><span class="nm">Statement engine</span><span class="st parked">parked</span></span>
+              <span class="chip closed" style="--fill:0%"><span class="ms">B</span><span class="nm">ERP connector</span><span class="st parked">parked</span></span>
+            </div>
+            <div class="desc-list">
+              Tenant substrate on main (pkg/tenant · pkg/sts · mig 015+). Commercial B (P772–776) frozen 2026-07-16 — no code.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- L6 -->
+    <div class="unit" data-tier="app">
+      <div class="rail">
+        <div class="r-num">UNIT L6</div>
+        <div class="r-name">AI Ops</div>
+        <div class="r-en">Predict · assist · optimize</div>
+        <span class="r-tag">Application</span>
+      </div>
+      <div class="bay">
+        <div class="slot open empty">
+          <div class="s-label">
+            <div class="s-head"><span class="led"></span>Open Source</div>
+            <div class="s-count">0</div>
+          </div>
+          <div class="empty-msg">AI Ops product surfaces are Commercial (manifest appendix F). Platform tools remain OSS underneath.</div>
+        </div>
+        <div class="slot closed">
+          <div class="s-label">
+            <div class="s-head"><span class="led"></span>Commercial</div>
+            <div class="s-count">2 MVP · 1 paused</div>
+          </div>
+          <div>
+            <div class="mods">
+              <span class="chip closed" style="--fill:70%"><span class="ms">M4</span><span class="nm">Predictive baseline (z-score → ticket)</span><span class="st mvp">mvp</span></span>
+              <span class="chip closed" style="--fill:45%"><span class="ms">M4</span><span class="nm">Ops assistant (read-only tools)</span><span class="st mvp">mvp</span></span>
+              <span class="chip closed" style="--fill:0%"><span class="ms">M4</span><span class="nm">Peak/valley arbitrage</span><span class="st parked">paused</span></span>
+              <span class="chip closed" style="--fill:0%"><span class="ms">M4</span><span class="nm">Cooling optimization product</span><span class="st gated">no code</span></span>
+              <span class="chip closed" style="--fill:0%"><span class="ms">GPU</span><span class="nm">DCGM capacity / fabric</span><span class="st gated">hardware</span></span>
+            </div>
+            <div class="desc-list">
+              core/predict* + VM series · pkg/assistant + cios-assistant · P724 arbitrage paused · field PdM recall not a closeout gate.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /stack -->
+
+  <!-- topology -->
+  <div class="sec">
+    <div>
+      <div class="eyebrow">§02 · Topology</div>
+      <h2>Asset trees, <em>from protocol</em></h2>
+    </div>
+    <div class="right">Capacity uses Relation edges<br>not parent chains alone</div>
+  </div>
+
+  <div class="topo-grid">
+    <div class="topo-card">
+      <div class="t-tag">
+        <span class="t-layer">L3 · Compute</span>
+        <span class="t-ms">dict shipped</span>
+      </div>
+      <h3>Twin: <code>site → pod → {tank|rack} → node → gpu</code></h3>
+      <div class="topo-tree">
+        <div><span class="root">site</span></div>
+        <div>└─ <span class="root">pod</span></div>
+        <div>&nbsp;&nbsp;&nbsp;├─ <span class="root">tank</span><span class="note">AC immersion</span></div>
+        <div>&nbsp;&nbsp;&nbsp;└─ <span class="root">rack</span><span class="note">DC / DLC</span></div>
+        <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└─ <span class="leaf">node → gpu</span></div>
+      </div>
+      <div class="t-note">From <code>protocol/types.yaml</code> · path grammar via <code>pkg/cpath</code>.</div>
+    </div>
+    <div class="topo-card">
+      <div class="t-tag">
+        <span class="t-layer">L3 · Cooling / power</span>
+        <span class="t-ms">dict shipped</span>
+      </div>
+      <h3>Facility: <code>chiller · cdu · ups · busbar · meter</code></h3>
+      <div class="topo-tree">
+        <div><span class="root">chiller</span> → dry-cooler / pump / valve → <span class="root">cdu</span> → tank</div>
+        <div style="margin-top:8px"><span class="root">ups</span> · <span class="root">busbar</span> · <span class="root">tou/meter</span> · <span class="leaf">bess</span></div>
+      </div>
+      <div class="t-note">Capacity arithmetic over Relation:feeds / cools (Commercial engine). Hybrid-chiller vendor data still external.</div>
+    </div>
+    <div class="topo-card">
+      <div class="t-tag">
+        <span class="t-layer">Deploy</span>
+        <span class="t-ms">edge live</span>
+      </div>
+      <h3>Site plane (implemented)</h3>
+      <div class="topo-tree">
+        <div>drivers → <span class="root">gateway</span> → NATS → <span class="root">edge-writer</span> → VM</div>
+        <div><span class="root">cios-core</span> ↔ PG · VM · NATS · alarm · rules</div>
+        <div><span class="root">apigw</span> → ops-portal · customer-portal</div>
+      </div>
+      <div class="t-note"><code>deploy/edge/</code> · docs/ops/edge-install.md · zero-inbound loopback default.</div>
+    </div>
+    <div class="topo-card">
+      <div class="t-tag">
+        <span class="t-layer">Deploy</span>
+        <span class="t-ms">fleet gated</span>
+      </div>
+      <h3>Fleet plane (specified only)</h3>
+      <div class="topo-tree">
+        <div><span class="root">fleet-registry</span> · <span class="root">fleet-ingest</span> · <span class="root">fleet-api</span></div>
+        <div>leafnode TLS ← sites (outbound only)</div>
+        <div><span class="leaf">homomorphic /v1 superset (L33)</span></div>
+      </div>
+      <div class="t-note">No runtime under <code>fleet/</code>. docs/product/fleet.md · E3.7 / P671.</div>
+    </div>
+  </div>
+
+  <div class="doc-foot">
+    <div>
+      <h4>Authority</h4>
+      <div><a href="OSS-MANIFEST.md">OSS-MANIFEST.md</a> — path → license</div>
+      <div><a href="PROJECT-STATUS.md">PROJECT-STATUS.md</a> — Chinese status</div>
+      <div><a href="DECISION-2026-07-16-gate-closeout.md">gate-closeout decision</a></div>
+      <div><a href="LOCKED.md">LOCKED.md</a> L1–L110</div>
+      <div><a href="../protocol/spec-006-architecture.md">spec-006</a> modules &amp; planes</div>
+    </div>
+    <div>
+      <h4>Product &amp; ops</h4>
+      <div><a href="product/edge.md">product/edge.md</a> · <a href="ops/edge-install.md">ops/edge-install.md</a></div>
+      <div><a href="product/fleet.md">product/fleet.md</a> · <a href="ops/fleet-install.md">ops/fleet-install.md</a></div>
+      <div><a href="README.md">docs/README.md</a> · <a href="../README.md">repo README</a></div>
+      <div style="margin-top:10px;color:var(--ink-3)">v7 · 2026-07-16 · static snapshot (re-audit when closing a milestone)</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

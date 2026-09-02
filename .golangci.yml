@@ -1,0 +1,30 @@
+# PRMT-029 §4.4 — minimal lint set. Add linters one at a time
+# as the codebase earns them; do not pre-enable style nits.
+#
+# errcheck is scoped to the packages touched by PRMT-029 (cmd/
+# cios-core and CI tooling) because the rest of the tree has
+# pre-existing defer-Close noise that belongs in a dedicated
+# errcheck-cleanup PRMT (PRMT-029 §10). PRMT-029 §5.2 finding
+# #20.
+linters:
+  enable:
+    - govet
+    - errcheck
+    - staticcheck
+    - ineffassign
+    - unused
+    - misspell
+
+run:
+  timeout: 5m
+
+issues:
+  # errcheck noise patterns commonly accepted in Go: defer-Close
+  # pairs where the close error is intentionally swallowed (e.g.
+  # when the surrounding function has already returned or the
+  # resource is best-effort). PRMT-029 §5.2 finding #20.
+  exclude-rules:
+    - path: (.+)\.go$
+      text: "Error return value of `(os\\.RemoveAll|os\\.MkdirAll|os\\.Symlink|os\\.Chmod|defer .*\\.Close\\(\\)|defer .*\\.Body\\.Close\\(\\))` is not checked"
+      linters:
+        - errcheck

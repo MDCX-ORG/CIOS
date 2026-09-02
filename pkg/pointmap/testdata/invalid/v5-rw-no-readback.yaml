@@ -1,0 +1,10 @@
+kind: PointMap
+metadata:
+  name: v5-rw-no-readback
+  driver: modbus-sim
+  appliesTo: cdu
+spec:
+  points:
+    - point: tcs.opening
+      access: rw
+      risk_class: b

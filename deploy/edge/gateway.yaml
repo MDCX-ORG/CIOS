@@ -1,0 +1,13 @@
+# M0 demo gateway configuration. Targets a modbussim running on
+# 127.0.0.1:15020 (PRMT-013 brings up the sim alongside) and writes
+# the converted samples to a locally-running VictoriaMetrics. Path
+# fields are relative to THIS file's directory.
+site: site01
+protocol_dir: ../../protocol
+vm_write_url: http://127.0.0.1:8428/api/v1/import/prometheus
+interval: 5s
+devices:
+  - asset: site01.pod000.cdu000
+    pointmap: pointmaps/cdu-sim.yaml
+    endpoint: 127.0.0.1:15020
+    unit_id: "1"

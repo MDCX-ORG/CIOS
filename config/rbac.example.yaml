@@ -1,0 +1,66 @@
+# config/rbac.example.yaml — PRMT-019 §4.7 reference document.
+#
+# This file is NOT loaded by the running binaries. It documents the
+# shape of the RBAC table that NewStaticTokenVerifier expects, so a
+# future cmd-side loader (or an ops engineer hand-rolling a config)
+# has a concrete starting point.
+#
+# Two security invariants govern the format:
+#
+#   1. The file MUST store the SHA-256 hex digest of each token, not
+#      the plaintext. Distribute the plaintext to the client by an
+#      out-of-band secure channel; the server only ever sees digests.
+#   2. Every scope pattern listed under `scopes:` MUST parse under
+#      the pkg/cpath glob grammar (spec-001 §2). The server validates
+#      every scope at load time and refuses to boot on a bad pattern,
+#      so a typo here fails noisily — not at request time.
+#
+# Generating a digest from a plaintext token:
+#
+#   printf %s 'plaintext-token-here' | shasum -a 256 | awk '{print $1}'
+#   # → 64-character lowercase hex string
+#
+# Rotation:
+#
+#   To rotate a token, ADD the new digest under a new tokens entry,
+#   roll clients to the new plaintext, then DELETE the old digest.
+#   The verifier holds the table in memory; restart cios-core to
+#   pick up edits (live reload is M2+).
+#
+# Role × action matrix (spec-004 §6, fixed in code):
+#
+#   viewer    : read only
+#   operator  : read + control:write (Set on A/B class points)
+#   admin     : read + control:write + apply (PUT/DELETE assets)
+#   tenant    : M3 — not in the M1 activation set
+#
+# Subtree semantics (LOCKED L50 / D14):
+#
+#   - read implies subtree: a scope of "site01.pod002" covers every
+#     descendant resource and point on Query.
+#   - write is explicit: to permit Set under "site01.pod002" the
+#     scope must be written as "site01.pod002.**" (or as a literal
+#     point address).
+
+tokens:
+  # Grafana datasource — viewer over the whole site (read implies subtree).
+  # plaintext: rotate-this-grafana-token (DO NOT ship plaintext in the config).
+  - sha256: "0000000000000000000000000000000000000000000000000000000000000001"
+    subject: "svc:grafana"
+    role: viewer
+    scopes:
+      - "site01.**"
+
+  # Cooling-ops machine token — operator scoped to pod002 only,
+  # with an explicit ".**" so the operator can Set fan RPM under it.
+  - sha256: "0000000000000000000000000000000000000000000000000000000000000002"
+    subject: "svc:cooling-ops"
+    role: operator
+    scopes:
+      - "site01.pod002.**"
+
+  # Site admin — admin bypasses scope, so the scopes list may be empty.
+  - sha256: "0000000000000000000000000000000000000000000000000000000000000003"
+    subject: "svc:site-admin"
+    role: admin
+    scopes: []

@@ -1,0 +1,15 @@
+# PRMT-027 §4 — Pod 烟雾 alert/action 等级（warn 提前）。
+# smoke >= 1 → 持续 30s 升级为 major，给值班留出响应窗口，
+# 避免与 fire1 抢响应优先级。
+---
+kind: AlarmRule
+metadata:
+  name: pod-smoke-alert
+  appliesTo: pod
+spec:
+  expr: "smoke >= 1"
+  for: 30s
+  severity: major
+  annotations:
+    summary: "Pod 烟雾 alert/action 等级（smoke >= 1 持续 30s）"
+    runbook: "rb/pod-smoke-alert"

@@ -1,0 +1,24 @@
+# 字典扩展片段 — L54 分层字典机制首件
+# 来源: EXT-001 BOM 实测 (docs/reference/ext-001/t2-model-configs.yaml, 2026-06-11)
+# 规则 (L54): 新配置设备/BOM 即可新增片段, 无需统一审批; CI 互斥校验是唯一闸门。
+# 片段 schema: { version, types?, quantities?, derived?, units? } — 与核心表同形, 装载时合并。
+# 注意: 片段只允许"新增"词条; 修改既有词条 (如父级扩充) 仍走核心表 PR。
+version: "0.1"
+
+types:
+  rdhx:     { parents: [rack],       level: device, desc: "后门换热器 (如 VERTIV CoolLoop DCD35); DC45 每 rack 1 台" }
+  ceilair:  { parents: [pod],        level: device, desc: "顶置空调 (如 STULZ OHS, DX+自由冷); DC45 9 台" }
+  manifold: { parents: [rack],       level: device, desc: "冷板分水器; 入口 PICV+流量计, 每 rack 2-3 个" }
+  pdc:      { parents: [pod],        level: device, desc: "配电柜 (PDC1/IT-PDC); AC 系列无母线走 PDC 架构" }
+  ats:      { parents: [pod, site],  level: device, desc: "双路电源切换开关 (市电/U电)" }
+
+quantities:
+  conductivity: { unit: us_per_cm,   kind: gauge, desc: "电导率; 浸没冷却液质量监测 (A32 每槽 1)" }
+  h2:           { unit: percent_lel, kind: gauge, desc: "氢气浓度; UPS 锂电舱顶 2N 布点 (DC45)" }
+
+units:
+  us_per_cm:
+    accepts:
+      ms_per_cm: { factor: 1000.0, offset: 0 }
+  percent_lel:
+    accepts: {}

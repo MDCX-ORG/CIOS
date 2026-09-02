@@ -1,0 +1,730 @@
+# CIOS seed assets — architect pre-work for PRMT-164 (L93 Path B / L94 feature/m3-model)
+# Source: docs/reference/ext-001/t2-model-configs.yaml (confirmed structure rows only).
+# Types: protocol/types.yaml core table ONLY (no ext.d types) — validates under either
+#        known-type set the coder may build (types.yaml direct OR cpath.LoadDict).
+# Paths: spec-001 §2 EBNF (site=citycode+seq; device idx 3-digit zero-pad; chip idx bare).
+# Serials are synthetic dev-seed placeholders. Counts marked TBD in EXT-001 are omitted,
+# not invented (EXT-001 no-fabrication rule).
+assets:
+  - path: "sgp01.switchgear000"
+    type: "switchgear"
+    attributes:
+      model: "MV-Incoming"
+      lifecycle: "active"
+  - path: "sgp01.switchgear000.breaker000"
+    type: "breaker"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.switchgear000.meter000"
+    type: "meter"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.watermeter000"
+    type: "watermeter"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000"
+    type: "pod"
+    attributes:
+      model: "DC45"
+      series: "dlc"
+      serial: "FC-DC45-2026-0001"
+      template: "dc45-v1"
+      rated_power_kw: 1240
+      rated_power_w: 1240000
+      rated_cooling_kw: 1500
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000"
+    type: "rack"
+    attributes:
+      rated_rack_power_w: 150000
+      kind: "dlc"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.pdu000"
+    type: "pdu"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack001"
+    type: "rack"
+    attributes:
+      rated_rack_power_w: 150000
+      kind: "dlc"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack001.pdu000"
+    type: "pdu"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack002"
+    type: "rack"
+    attributes:
+      rated_rack_power_w: 150000
+      kind: "dlc"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack002.pdu000"
+    type: "pdu"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack003"
+    type: "rack"
+    attributes:
+      rated_rack_power_w: 150000
+      kind: "dlc"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack003.pdu000"
+    type: "pdu"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack004"
+    type: "rack"
+    attributes:
+      rated_rack_power_w: 150000
+      kind: "dlc"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack004.pdu000"
+    type: "pdu"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack005"
+    type: "rack"
+    attributes:
+      rated_rack_power_w: 150000
+      kind: "dlc"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack005.pdu000"
+    type: "pdu"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack006"
+    type: "rack"
+    attributes:
+      rated_rack_power_w: 150000
+      kind: "dlc"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack006.pdu000"
+    type: "pdu"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack007"
+    type: "rack"
+    attributes:
+      rated_rack_power_w: 150000
+      kind: "dlc"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack007.pdu000"
+    type: "pdu"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack008"
+    type: "rack"
+    attributes:
+      rated_rack_power_w: 40000
+      kind: "aircooled"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack008.pdu000"
+    type: "pdu"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node000"
+    type: "node"
+    attributes:
+      serial: "FC-NODE-DC45-0001"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node000.gpu0"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000001"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node000.gpu1"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000002"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node000.gpu2"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000003"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node000.gpu3"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000004"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node000.gpu4"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000005"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node000.gpu5"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000006"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node000.gpu6"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000007"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node000.gpu7"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000008"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node001"
+    type: "node"
+    attributes:
+      serial: "FC-NODE-DC45-0002"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node001.gpu0"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000009"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node001.gpu1"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000010"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node001.gpu2"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000011"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node001.gpu3"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000012"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node001.gpu4"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000013"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node001.gpu5"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000014"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node001.gpu6"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000015"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node001.gpu7"
+    type: "gpu"
+    attributes:
+      model: "B300-SXM"
+      serial: "NVD-B300-000016"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node002"
+    type: "node"
+    attributes:
+      serial: "FC-NODE-DC45-0003"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node003"
+    type: "node"
+    attributes:
+      serial: "FC-NODE-DC45-0004"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node004"
+    type: "node"
+    attributes:
+      serial: "FC-NODE-DC45-0005"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node005"
+    type: "node"
+    attributes:
+      serial: "FC-NODE-DC45-0006"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node006"
+    type: "node"
+    attributes:
+      serial: "FC-NODE-DC45-0007"
+      lifecycle: "active"
+  - path: "sgp01.pod000.rack000.node007"
+    type: "node"
+    attributes:
+      serial: "FC-NODE-DC45-0008"
+      lifecycle: "maintenance"
+  - path: "sgp01.pod000.cdu000"
+    type: "cdu"
+    attributes:
+      model: "DC45-CDU"
+      rated_cooling_kw: 1500
+      serial: "FC-CDU-2026-0001"
+      lifecycle: "active"
+  - path: "sgp01.pod000.cdu000.pump000"
+    type: "pump"
+    attributes:
+      role: "secondary"
+      lifecycle: "active"
+  - path: "sgp01.pod000.cdu000.pump001"
+    type: "pump"
+    attributes:
+      role: "secondary"
+      lifecycle: "active"
+  - path: "sgp01.pod000.cdu000.valve000"
+    type: "valve"
+    attributes:
+      role: "three-way"
+      lifecycle: "active"
+  - path: "sgp01.pod000.ups000"
+    type: "ups"
+    attributes:
+      model: "EATON-9395XR-1500"
+      rated_power_kw: 1500
+      serial: "FC-UPS-2026-0001"
+      lifecycle: "active"
+  - path: "sgp01.pod000.ups000.battery000"
+    type: "battery"
+    attributes:
+      model: "93LiG2"
+      lifecycle: "active"
+  - path: "sgp01.pod000.ups000.battery001"
+    type: "battery"
+    attributes:
+      model: "93LiG2"
+      lifecycle: "active"
+  - path: "sgp01.pod000.ups000.battery002"
+    type: "battery"
+    attributes:
+      model: "93LiG2"
+      lifecycle: "active"
+  - path: "sgp01.pod000.busbar000"
+    type: "busbar"
+    attributes:
+      model: "SIEMENS-2500A"
+      lifecycle: "active"
+  - path: "sgp01.pod000.busbar000.tou000"
+    type: "tou"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.busbar000.tou001"
+    type: "tou"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.busbar000.tou002"
+    type: "tou"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.busbar000.tou003"
+    type: "tou"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.busbar000.tou004"
+    type: "tou"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.busbar000.tou005"
+    type: "tou"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.busbar000.tou006"
+    type: "tou"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.busbar000.tou007"
+    type: "tou"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.busbar000.tou008"
+    type: "tou"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.busbar000.tou002.meter000"
+    type: "meter"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.chiller000"
+    type: "chiller"
+    attributes:
+      model: "HybridChiller"
+      serial: "FC-HC-2026-0001"
+      template: "hybridchiller-v1"
+      rated_cooling_kw: 1600
+      lifecycle: "active"
+  - path: "sgp01.pod000.chiller000.drycooler000"
+    type: "drycooler"
+    attributes:
+      rated_cooling_kw: 1700
+      lifecycle: "active"
+  - path: "sgp01.pod000.chiller000.pump000"
+    type: "pump"
+    attributes:
+      role: "fws-main"
+      lifecycle: "active"
+  - path: "sgp01.pod000.chiller000.pump001"
+    type: "pump"
+    attributes:
+      role: "fws-main"
+      lifecycle: "active"
+  - path: "sgp01.pod000.chiller000.valve000"
+    type: "valve"
+    attributes:
+      role: "bypass"
+      lifecycle: "active"
+  - path: "sgp01.pod000.chiller000.compressor000"
+    type: "compressor"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod000.chiller000.compressor001"
+    type: "compressor"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod001"
+    type: "pod"
+    attributes:
+      model: "AC45"
+      series: "immersion"
+      serial: "FC-AC45-2026-0002"
+      template: "ac45-v1"
+      rated_power_kw: 400
+      rated_power_w: 400000
+      rated_cooling_kw: 400
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank000"
+    type: "tank"
+    attributes:
+      model: "A32"
+      rated_power_kw: 50
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank000.cdu000"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank000.cdu001"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank001"
+    type: "tank"
+    attributes:
+      model: "A32"
+      rated_power_kw: 50
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank001.cdu000"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank001.cdu001"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank002"
+    type: "tank"
+    attributes:
+      model: "A32"
+      rated_power_kw: 50
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank002.cdu000"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank002.cdu001"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank003"
+    type: "tank"
+    attributes:
+      model: "A32"
+      rated_power_kw: 50
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank003.cdu000"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank003.cdu001"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank004"
+    type: "tank"
+    attributes:
+      model: "A32"
+      rated_power_kw: 50
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank004.cdu000"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank004.cdu001"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank005"
+    type: "tank"
+    attributes:
+      model: "A32"
+      rated_power_kw: 50
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank005.cdu000"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank005.cdu001"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank006"
+    type: "tank"
+    attributes:
+      model: "A32"
+      rated_power_kw: 50
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank006.cdu000"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank006.cdu001"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank007"
+    type: "tank"
+    attributes:
+      model: "A32"
+      rated_power_kw: 50
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank007.cdu000"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank007.cdu001"
+    type: "cdu"
+    attributes:
+      model: "A32-CDU"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu000"
+    type: "pdu"
+    attributes:
+      feed: "A"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu001"
+    type: "pdu"
+    attributes:
+      feed: "B"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu002"
+    type: "pdu"
+    attributes:
+      feed: "A"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu003"
+    type: "pdu"
+    attributes:
+      feed: "B"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu004"
+    type: "pdu"
+    attributes:
+      feed: "A"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu005"
+    type: "pdu"
+    attributes:
+      feed: "B"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu006"
+    type: "pdu"
+    attributes:
+      feed: "A"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu007"
+    type: "pdu"
+    attributes:
+      feed: "B"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu008"
+    type: "pdu"
+    attributes:
+      feed: "A"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu009"
+    type: "pdu"
+    attributes:
+      feed: "B"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu010"
+    type: "pdu"
+    attributes:
+      feed: "A"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu011"
+    type: "pdu"
+    attributes:
+      feed: "B"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu012"
+    type: "pdu"
+    attributes:
+      feed: "A"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu013"
+    type: "pdu"
+    attributes:
+      feed: "B"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu014"
+    type: "pdu"
+    attributes:
+      feed: "A"
+      lifecycle: "active"
+  - path: "sgp01.pod001.pdu015"
+    type: "pdu"
+    attributes:
+      feed: "B"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank000.node000"
+    type: "node"
+    attributes:
+      serial: "FC-NODE-AC45-0001"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank000.node000.gpu0"
+    type: "gpu"
+    attributes:
+      model: "H200"
+      serial: "NVD-H200-000001"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank000.node000.gpu1"
+    type: "gpu"
+    attributes:
+      model: "H200"
+      serial: "NVD-H200-000002"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank000.node000.gpu2"
+    type: "gpu"
+    attributes:
+      model: "H200"
+      serial: "NVD-H200-000003"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank000.node000.gpu3"
+    type: "gpu"
+    attributes:
+      model: "H200"
+      serial: "NVD-H200-000004"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank000.node000.gpu4"
+    type: "gpu"
+    attributes:
+      model: "H200"
+      serial: "NVD-H200-000005"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank000.node000.gpu5"
+    type: "gpu"
+    attributes:
+      model: "H200"
+      serial: "NVD-H200-000006"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank000.node000.gpu6"
+    type: "gpu"
+    attributes:
+      model: "H200"
+      serial: "NVD-H200-000007"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank000.node000.gpu7"
+    type: "gpu"
+    attributes:
+      model: "H200"
+      serial: "NVD-H200-000008"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank000.node001"
+    type: "node"
+    attributes:
+      serial: "FC-NODE-AC45-0002"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank000.node002"
+    type: "node"
+    attributes:
+      serial: "FC-NODE-AC45-0003"
+      lifecycle: "active"
+  - path: "sgp01.pod001.tank000.node003"
+    type: "node"
+    attributes:
+      serial: "FC-NODE-AC45-0004"
+      lifecycle: "active"
+  - path: "sgp01.pod001.ups000"
+    type: "ups"
+    attributes:
+      model: "EATON-9395XR-600"
+      rated_power_kw: 600
+      serial: "FC-UPS-2026-0002"
+      lifecycle: "active"
+  - path: "sgp01.pod001.ups000.battery000"
+    type: "battery"
+    attributes:
+      model: "93LiG2"
+      lifecycle: "active"
+  - path: "sgp01.pod001.ups000.battery001"
+    type: "battery"
+    attributes:
+      model: "93LiG2"
+      lifecycle: "active"
+  - path: "sgp01.pod001.switch000"
+    type: "switch"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod001.switch001"
+    type: "switch"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod001.switch002"
+    type: "switch"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod001.switch003"
+    type: "switch"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod001.switch004"
+    type: "switch"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod001.switch005"
+    type: "switch"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod001.switch006"
+    type: "switch"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod001.switch007"
+    type: "switch"
+    attributes:
+      lifecycle: "active"
+  - path: "sgp01.pod001.chiller000"
+    type: "chiller"
+    attributes:
+      model: "HybridCoolingSystem"
+      serial: "FC-HC-2026-0002"
+      template: "hybridchiller-v1"
+      lifecycle: "active"

@@ -1,0 +1,15 @@
+# PRMT-026 R5 — single bootstrap AlarmRule. Sentinel: leak==0
+# (R5 §4.6 four-step discovery; sentinel audit in PRMT-026 R5 prompt §8).
+# Coexistence with PRMT-027 cdu-leak-detected: leak==0 vs leak==1,
+# distinct alarm ids (eventID(rule.Name, assetPath)).
+---
+kind: AlarmRule
+metadata:
+  name: m1-bootstrap-cdu-leak-dry
+  appliesTo: cdu
+spec:
+  expr: "leak == 0"
+  for: 0s
+  severity: minor
+  annotations:
+    summary: "M1 bootstrap rule: cdu-sim leak register (0x0031) defaults to 0 (dry), so leak==0 fires on first tick and exercises the alarms table (real thresholds live in PRMT-027)"

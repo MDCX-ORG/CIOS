@@ -1,0 +1,15 @@
+# PRMT-027 §4 — CDU 供水温度过高。
+# 量纲 celsius；45 °C 阈值对应 spec-002/EXT-002 的 CDU
+# 一次侧温越限上界（CDU 设计供水 ≤ 40 °C；45 °C 已偏离）。
+---
+kind: AlarmRule
+metadata:
+  name: cdu-fws-supply-temp-high
+  appliesTo: cdu
+spec:
+  expr: "fws.supply.temp > 45"
+  for: 2m
+  severity: major
+  annotations:
+    summary: "CDU 供水温度过高（> 45 °C 持续 2min）"
+    runbook: "rb/cdu-supply-temp-high"

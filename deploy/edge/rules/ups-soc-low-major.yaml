@@ -1,0 +1,15 @@
+# PRMT-027 §4 — UPS 荷电状态过低（major 档）。
+# soc 单位 percent；20% 以下逼近切断线，无电网时需立即响应。
+# appliesTo=ups（pod 内置 UPS，dict.Types 注册）。
+---
+kind: AlarmRule
+metadata:
+  name: ups-soc-low-major
+  appliesTo: ups
+spec:
+  expr: "soc < 20"
+  for: 30s
+  severity: major
+  annotations:
+    summary: "UPS 荷电状态过低（soc < 20% 持续 30s）"
+    runbook: "rb/ups-soc-low-major"

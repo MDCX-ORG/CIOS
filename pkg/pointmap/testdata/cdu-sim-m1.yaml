@@ -1,0 +1,29 @@
+kind: PointMap
+metadata:
+  name: cdu-sim-m1
+  driver: modbus-sim
+  appliesTo: cdu
+spec:
+  points:
+    - point: fws.supply.flow
+      register: 30021
+      type: holding, float32, be
+      scale: 0.1
+      unit_in: m3ph
+    - point: fws.supply.temp
+      register: 30023
+      unit_in: decicelsius
+    - point: fws.return.temp
+      register: 30025
+      unit_in: decicelsius
+    - point: tcs.opening
+      register: 40011
+      access: rw
+      risk_class: b
+      limits: { min: 0, max: 100 }
+    - point: status
+      register: 30001
+      enum_map: { 1: 0, 2: 1, 16: 3 }
+    - point: leak
+      register: 30002
+      enum_map: { 0: 0, 1: 1 }

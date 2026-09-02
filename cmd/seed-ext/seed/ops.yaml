@@ -1,0 +1,169 @@
+# CIOS seed operations data — architect pre-work for PRMT-165 (L93 Path B / L94 feature/m3-model)
+# EXT has NO ops data (L93 §5): tickets/PM/spares/inspections/alarms are SYNTHESIZED to the
+# spec-008 field shapes + spec-003 enums. Every asset_path below exists in seed/assets.yaml.
+# Keys are snake_case mirrors (SeedAlarm/SeedSpare/SeedTicket/SeedPM/SeedInspection per PRMT-165 §4).
+# Enums: severity ∈ {critical,major,minor,info} (spec-003 §2); alarm state ∈ {firing,acked,resolved}
+# (core.Alarm); ticket state ∈ {open,acknowledged,resolved,closed} (spec-008 §2).
+# Dates anchored around 2026-07-01.
+
+alarms:
+  - id: "al_seed_0001"
+    asset_path: "sgp01.pod000.cdu000"
+    severity: "major"
+    state: "firing"
+    summary: "CDU secondary loop ΔT low"
+    since: "2026-06-30T22:10:00Z"
+  - id: "al_seed_0002"
+    asset_path: "sgp01.pod000.rack000.node000.gpu0"
+    severity: "critical"
+    state: "firing"
+    summary: "GPU over-temperature"
+    since: "2026-07-01T03:42:00Z"
+  - id: "al_seed_0003"
+    asset_path: "sgp01.pod001.tank000.cdu000"
+    severity: "minor"
+    state: "acked"
+    summary: "Coolant conductivity high"
+    since: "2026-06-29T14:05:00Z"
+  - id: "al_seed_0004"
+    asset_path: "sgp01.pod000.ups000"
+    severity: "major"
+    state: "firing"
+    summary: "UPS transferred to battery"
+    since: "2026-07-01T06:15:00Z"
+  - id: "al_seed_0005"
+    asset_path: "sgp01.pod001.tank003"
+    severity: "info"
+    state: "resolved"
+    summary: "Immersion liquid level low (recovered)"
+    since: "2026-06-28T09:30:00Z"
+  - id: "al_seed_0006"
+    asset_path: "sgp01.pod000.chiller000.compressor000"
+    severity: "major"
+    state: "firing"
+    summary: "Compressor discharge pressure high"
+    since: "2026-07-01T05:20:00Z"
+
+tickets:
+  - id: "tk_seed_0001"
+    alarm_id: "al_seed_0001"
+    asset_path: "sgp01.pod000.cdu000"
+    title: "CDU secondary loop ΔT low"
+    severity: "major"
+    state: "open"
+    opened_at: "2026-06-30T22:11:00Z"
+  - id: "tk_seed_0002"
+    alarm_id: "al_seed_0002"
+    asset_path: "sgp01.pod000.rack000.node000.gpu0"
+    title: "GPU over-temperature"
+    severity: "critical"
+    state: "acknowledged"
+    opened_at: "2026-07-01T03:43:00Z"
+  - id: "tk_seed_0003"
+    alarm_id: ""
+    asset_path: "sgp01.pod001.tank000"
+    title: "Scheduled coolant sampling"
+    severity: "minor"
+    state: "open"
+    opened_at: "2026-06-25T08:00:00Z"
+  - id: "tk_seed_0004"
+    alarm_id: "al_seed_0004"
+    asset_path: "sgp01.pod000.ups000"
+    title: "UPS transferred to battery"
+    severity: "major"
+    state: "open"
+    opened_at: "2026-07-01T06:16:00Z"
+  # Closed tickets become /api/cases (KB seed). ProjectTicket sets ClosedAt=nil
+  # unless store JSON carries closed_at — portal-live patches store post-seed.
+  - id: "tk_seed_closed_0001"
+    alarm_id: "al_seed_0005"
+    asset_path: "sgp01.pod001.tank003"
+    title: "Immersion liquid level low (closed)"
+    severity: "info"
+    state: "closed"
+    opened_at: "2026-06-28T09:30:00Z"
+    closed_at: "2026-06-28T11:00:00Z"
+  - id: "tk_seed_closed_0002"
+    alarm_id: "al_seed_0002"
+    asset_path: "sgp01.pod000.rack000.node000.gpu0"
+    title: "GPU over-temperature (postmortem)"
+    severity: "critical"
+    state: "closed"
+    opened_at: "2026-06-20T03:43:00Z"
+    closed_at: "2026-06-20T08:00:00Z"
+  - id: "tk_seed_closed_0003"
+    alarm_id: "al_seed_0001"
+    asset_path: "sgp01.pod000.cdu000"
+    title: "CDU ΔT low — resolved and closed"
+    severity: "major"
+    state: "closed"
+    opened_at: "2026-06-15T22:11:00Z"
+    closed_at: "2026-06-16T04:00:00Z"
+
+pm_schedules:
+  - id: "pm_seed_0001"
+    asset_path: "sgp01.pod000.cdu000"
+    kind: "calendar"
+    interval_days: 30
+    next_due: "2026-07-15T00:00:00Z"
+    title: "Monthly CDU filter check"
+    severity: "minor"
+    enabled: true
+  - id: "pm_seed_0002"
+    asset_path: "sgp01.pod000.chiller000"
+    kind: "calendar"
+    interval_days: 90
+    next_due: "2026-09-01T00:00:00Z"
+    title: "Quarterly HybridChiller service"
+    severity: "major"
+    enabled: true
+  - id: "pm_seed_0003"
+    asset_path: "sgp01.pod001.ups000"
+    kind: "calendar"
+    interval_days: 180
+    next_due: "2026-12-01T00:00:00Z"
+    title: "Semi-annual UPS battery test"
+    severity: "major"
+    enabled: true
+
+spares:
+  - id: "sp_seed_0001"
+    sku: "FILT-CDU-01"
+    name: "CDU filter cartridge"
+    qty: 12
+    min_qty: 4
+    location: "SGP01-store"
+  - id: "sp_seed_0002"
+    sku: "PUMP-SEAL-02"
+    name: "CDU pump seal kit"
+    qty: 3
+    min_qty: 5
+    location: "SGP01-store"
+  - id: "sp_seed_0003"
+    sku: "GPU-B300-SXM"
+    name: "B300 SXM spare module"
+    qty: 2
+    min_qty: 1
+    location: "SGP01-secure"
+  - id: "sp_seed_0004"
+    sku: "UPS-BAT-93LIG2"
+    name: "93LiG2 battery module"
+    qty: 1
+    min_qty: 2
+    location: "SGP01-store"
+
+inspections:
+  - id: "ins_seed_0001"
+    asset_path: "sgp01.pod000.cdu000"
+    title: "Quarterly leak inspection"
+    items: ["check fittings", "check sensor cable", "check pump seals"]
+    interval_days: 90
+    next_due: "2026-09-01T00:00:00Z"
+    enabled: true
+  - id: "ins_seed_0002"
+    asset_path: "sgp01.pod001.tank000"
+    title: "Monthly immersion tank check"
+    items: ["check coolant level", "check conductivity sensor", "check node seating"]
+    interval_days: 30
+    next_due: "2026-07-20T00:00:00Z"
+    enabled: true

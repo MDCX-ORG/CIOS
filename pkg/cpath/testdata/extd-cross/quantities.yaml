@@ -1,0 +1,6 @@
+version: "0.1"
+quantities:
+  flow: { unit: lpm, kind: gauge }
+  temp: { unit: celsius, kind: gauge, desc: "temperature (in quantities)" }
+derived:
+  pue: { unit: ratio, host: [site] }

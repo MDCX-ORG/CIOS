@@ -1,0 +1,82 @@
+name: ci
+
+# Autoflow DISABLED 2026-07-16 (Yuri, L110 / M4 closeout F5): no push/PR
+# triggers. Manual dispatch only; the standing gate is local `make ci`.
+# (History: restored on push/PR 2026-07-16 morning per P797, ruled off same day.)
+# Local mirror: `make ci` (no golangci-lint — that stays in this workflow only).
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: build (${{ matrix.GOARCH }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        GOARCH: [amd64, arm64]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - name: Build
+        env:
+          GOOS: linux
+          GOARCH: ${{ matrix.GOARCH }}
+          CGO_ENABLED: 0
+        run: go build ./...
+
+  verify:
+    name: verify (amd64)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - name: Speccheck
+        run: go run ./tools/speccheck ./protocol
+      - name: go vet
+        run: go vet ./...
+      - name: go mod verify
+        run: go mod verify
+      - name: go mod tidy (no-drift check)
+        # `go mod tidy -diff` only prints the diff; no file mutation.
+        run: |
+          out=$(go mod tidy -diff 2>&1)
+          if [ -n "$out" ]; then
+            echo "$out"
+            echo "::error::go.mod / go.sum drift detected; see PRMT-029 §8"
+            exit 1
+          fi
+      # proto generation is local-only without protoc; install so the
+      # diff check is meaningful on CI.
+      - name: Install protoc
+        uses: arduino/setup-protoc@v2
+        with:
+          version: "25.x"
+      - name: Proto diff
+        run: |
+          make proto
+          git diff --exit-code -- '*.pb.go' || (echo "::error::proto-generated files are out of date; run 'make proto' locally" && exit 1)
+      - name: Test
+        # Default suite is offline: PG-gated tests t.Skip without CIOS_PG_DSN
+        # (P795 pg-parity remains local-only; optional job later).
+        run: go test -race -count=1 ./...
+      - name: gofmt
+        run: gofmt -l . | tee /dev/stderr | test ! -s /dev/stdin
+
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          # Pin to a concrete release: `latest` is non-deterministic.
+          version: v1.61.0

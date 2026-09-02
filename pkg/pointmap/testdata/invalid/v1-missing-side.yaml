@@ -1,0 +1,10 @@
+kind: PointMap
+metadata:
+  name: v1-missing-side
+  driver: modbus-sim
+  appliesTo: cdu
+spec:
+  points:
+    - point: fws.temp
+      register: 30023
+      unit_in: decicelsius

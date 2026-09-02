@@ -1,0 +1,182 @@
+# CIOS Site API — OpenAPI 3.1（D0.3）
+# v1.0（冻结，2026-06-13 评审会）｜由 PRMT-011 实现反向固化，与 core/ 路由保持同步（drift 检查 = 治理 §6 待补 CI 项）
+# 口径：M0 子集（无鉴权——L55③，M1 加 securitySchemes；Set/topology/events/tickets 端点 M1+ 增补）
+openapi: 3.1.0
+info:
+  title: CIOS Site API
+  version: 1.0.0
+  description: >
+    站点级 API（cios-core）。错误一律 RFC 7807（application/problem+json），
+    type = https://cios.dev/errors/<tail>，tail 注册表见 spec-004 §4。
+    变更类请求 body 可携带 request_id（spec-004 §5）：同 (method, path, request_id)
+    24h 内重放首次响应。所有响应回写 X-Request-Id 头。
+servers:
+  - url: http://127.0.0.1:8080
+paths:
+  /v1/assets:
+    get:
+      operationId: listAssets
+      summary: 列出资产（path 字典序，cursor 分页）
+      parameters:
+        - { name: filter, in: query, schema: { type: string }, description: cpath glob（spec-001 §2；跨段用 **） }
+        - { name: type, in: query, schema: { type: string }, description: 末节点类型等值过滤 }
+        - { name: page_size, in: query, schema: { type: integer, default: 100, maximum: 1000, minimum: 1 } }
+        - { name: page_token, in: query, schema: { type: string }, description: 上页 next_page_token 原样回传 }
+        - { name: order_by, in: query, schema: { type: string, enum: [path] } }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, next_page_token]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/Asset" } }
+                  next_page_token: { type: string, description: 空串 = 无更多页 }
+        "400": { $ref: "#/components/responses/Problem" }
+  /v1/assets/{path}:
+    parameters:
+      - { name: path, in: path, required: true, schema: { type: string }, description: 资产路径（spec-001 级联路径，不含 /） }
+    put:
+      operationId: applyAsset
+      summary: 声明式注册/覆盖资产（apply 幂等）
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [spec]
+              properties:
+                spec:
+                  type: object
+                  description: 自由结构；spec.type 必填且 == 路径末节点类型；attrs_required 见 spec-001 附录 A
+                resource_version: { type: integer, description: ">0 = 乐观锁；缺省/0 = 新建或强制覆盖" }
+                request_id: { type: string, description: 幂等去重键（spec-004 §5），缺省不去重 }
+      responses:
+        "200": { description: 覆盖成功, content: { application/json: { schema: { $ref: "#/components/schemas/Asset" } } } }
+        "201": { description: 新建成功, content: { application/json: { schema: { $ref: "#/components/schemas/Asset" } } } }
+        "400": { $ref: "#/components/responses/Problem" }
+        "409": { $ref: "#/components/responses/Problem" }
+    get:
+      operationId: getAsset
+      responses:
+        "200": { content: { application/json: { schema: { $ref: "#/components/schemas/Asset" } } } }
+        "400": { $ref: "#/components/responses/Problem" }
+        "404": { $ref: "#/components/responses/Problem" }
+    delete:
+      operationId: deleteAsset
+      parameters:
+        - { name: cascade, in: query, schema: { type: boolean, default: false }, description: true = 删除整个子树 }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { type: object, required: [deleted], properties: { deleted: { type: integer } } }
+        "400": { $ref: "#/components/responses/Problem" }
+        "404": { $ref: "#/components/responses/Problem" }
+        "409": { $ref: "#/components/responses/Problem" }
+  /v1/metrics/query:
+    get:
+      operationId: metricsQuery
+      summary: PromQL instant query（白名单透传 VM /api/v1/query）
+      parameters:
+        - { name: query, in: query, required: true, schema: { type: string } }
+        - { name: time, in: query, schema: { type: string } }
+      responses:
+        "200": { description: VM 响应原样回传（状态码/Content-Type/body 透传） }
+        "400": { $ref: "#/components/responses/Problem" }
+        "502": { $ref: "#/components/responses/Problem" }
+  /v1/metrics/query_range:
+    get:
+      operationId: metricsQueryRange
+      summary: PromQL range query（白名单透传 VM /api/v1/query_range）
+      parameters:
+        - { name: query, in: query, required: true, schema: { type: string } }
+        - { name: start, in: query, schema: { type: string } }
+        - { name: end, in: query, schema: { type: string } }
+        - { name: step, in: query, schema: { type: string } }
+      responses:
+        "200": { description: VM 响应原样回传 }
+        "400": { $ref: "#/components/responses/Problem" }
+        "502": { $ref: "#/components/responses/Problem" }
+  /v1/points/{path}:
+    get:
+      operationId: getPoint
+      summary: 点位最新值（promproj.Selector → VM instant query 首序列）
+      parameters:
+        - { name: path, in: path, required: true, schema: { type: string }, description: 完整点位地址（spec-002） }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [path, value, ts, quality]
+                properties:
+                  path: { type: string }
+                  value: { type: number }
+                  ts: { type: string, format: date-time }
+                  quality: { type: string, enum: [good, stale, suspect, substituted] }
+        "400": { $ref: "#/components/responses/Problem" }
+        "404": { $ref: "#/components/responses/Problem" }
+        "502": { $ref: "#/components/responses/Problem" }
+  /v1/alarms:
+    get:
+      operationId: listAlarms
+      summary: 列出告警（severity rank → since 降序；M0 只读）
+      parameters:
+        - { name: severity, in: query, schema: { type: string, enum: [critical, major, minor, info] } }
+        - { name: state, in: query, schema: { type: string, enum: [firing, acked, resolved] } }
+        - { name: filter, in: query, schema: { type: string }, description: 路径 glob }
+        - { name: page_size, in: query, schema: { type: integer, default: 100, maximum: 1000, minimum: 1 } }
+        - { name: page_token, in: query, schema: { type: string } }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, next_page_token]
+                properties:
+                  items: { type: array, items: { $ref: "#/components/schemas/Alarm" } }
+                  next_page_token: { type: string }
+        "400": { $ref: "#/components/responses/Problem" }
+components:
+  schemas:
+    Asset:
+      type: object
+      required: [path, resource_version, spec, created_at, updated_at]
+      properties:
+        path: { type: string, examples: ["site01.pod000.cdu000"] }
+        resource_version: { type: integer }
+        spec: { type: object }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+    Alarm:
+      type: object
+      required: [id, path, severity, state, summary, since]
+      properties:
+        id: { type: string }
+        path: { type: string }
+        severity: { type: string, enum: [critical, major, minor, info] }
+        state: { type: string, enum: [firing, acked, resolved] }
+        summary: { type: string }
+        since: { type: string, format: date-time }
+    Problem:
+      type: object
+      description: RFC 7807；type 尾段注册表见 spec-004 §4
+      required: [type, title, status, request_id]
+      properties:
+        type: { type: string, examples: ["https://cios.dev/errors/path-not-found"] }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        request_id: { type: string }
+  responses:
+    Problem:
+      description: RFC 7807 错误
+      content:
+        application/problem+json:
+          schema: { $ref: "#/components/schemas/Problem" }

@@ -1,0 +1,29 @@
+# config/rbac.lab-sample.yaml — LAB sample tokens (Yuri 2026-07-16).
+#
+# Lab-only sample credentials. Never use these values in production.
+# This file stores SHA-256 digests (same rules as rbac.example.yaml).
+#
+#   cios-core -rbac ./config/rbac.lab-sample.yaml ...
+#
+# DO NOT use in production.
+
+tokens:
+  # plaintext: cios-lab-admin-2026
+  - sha256: "b357f27b4caf67b4e8107d69209a2826cfbf5ddb386f21708a90e008ab1e6828"
+    subject: "svc:lab-admin"
+    role: admin
+    scopes: []
+
+  # plaintext: cios-lab-operator-2026
+  - sha256: "97b0fda2129833723378588f8f231f50e46792b2ec51bc760b9b4551901862a3"
+    subject: "svc:lab-operator"
+    role: operator
+    scopes:
+      - "sgp01.**"
+
+  # plaintext: cios-lab-viewer-2026
+  - sha256: "4eea980fbc6d2e6ef1a4d9a66f783911e53de550a9a0f7d06208bd10452efb7d"
+    subject: "svc:lab-viewer"
+    role: viewer
+    scopes:
+      - "sgp01.**"

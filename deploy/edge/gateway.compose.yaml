@@ -1,0 +1,35 @@
+# CIOS gateway configuration for the M1 single-site compose stack
+# (PRMT-026 §4.4). Differs from gateway.yaml (M0 host-proc demo) in
+# three ways:
+#
+#   - paths use container-internal absolute paths (/protocol,
+#     /etc/cios/pointmaps) because the binary runs in a container
+#     and the compose file maps the host directories read-only.
+#   - vm_write_url uses the compose service name "victoriametrics"
+#     instead of 127.0.0.1, so the gateway reaches VM over the
+#     compose bridge network.
+#   - the device endpoint uses the compose service name
+#     "cios-modbussim" instead of 127.0.0.1, for the same reason.
+#
+# Host-boundary safety (spec-006 §5.2): none of these endpoints are
+# published to the host; only the infra ports (8428/5432/4222/8222/
+# 3000) and cios-core's 8080 are host-reachable.
+site: site01
+protocol_dir: /protocol
+vm_write_url: http://victoriametrics:8428/api/v1/import/prometheus
+interval: 5s
+devices:
+  - asset: site01.pod000.cdu000
+    pointmap: /etc/cios/pointmaps/cdu-sim.yaml
+    endpoint: cios-modbussim:15020
+    unit_id: "1"
+# PRMT-015 §4.5: enable NATS JetStream publishing so cios-edge-writer
+# and cios-alarm (which both subscribe to cios.tlm.>) can consume.
+# stream_name matches the default in gateway/config.go so edge-writer
+# and alarm (which both default to "CIOS_TLM") bind to the same stream.
+# wal_path is /tmp so we don't need an extra volume — the WAL is a
+# per-container crash buffer and gets recreated on restart.
+nats:
+  url: nats://nats:4222
+  stream_name: CIOS_TLM
+  wal_path: /tmp/gateway.wal

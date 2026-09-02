@@ -1,0 +1,15 @@
+# PRMT-027 §4 — CDU 一次侧流量过低。
+# 量纲 lpm；CDU 一次侧设计流量 ≥ 80 lpm（EXT-002），< 50 lpm
+# 视为泵失效或阀门误关。
+---
+kind: AlarmRule
+metadata:
+  name: cdu-fws-supply-flow-low
+  appliesTo: cdu
+spec:
+  expr: "fws.supply.flow < 50"
+  for: 1m
+  severity: major
+  annotations:
+    summary: "CDU 一次侧流量过低（< 50 lpm 持续 1min）"
+    runbook: "rb/cdu-supply-flow-low"

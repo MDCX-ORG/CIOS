@@ -1,0 +1,87 @@
+syntax = "proto3";
+package cios.driver.v1;
+option go_package = "github.com/yurimeng/cios/proto;driverproto";
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+// --- 共用类型 ---
+
+message Sample {
+    string  point   = 1;
+    double  value   = 2;
+    google.protobuf.Timestamp ts = 3;
+    string  quality = 4;  // "good"|"stale"|"suspect"|"substituted"
+}
+
+message DriverConfigProto {
+    string endpoint = 1;
+    map<string,string> options = 2;
+}
+
+message ControlCommandProto {
+    string  point      = 1;
+    double  value      = 2;
+    string  request_id = 3;
+    google.protobuf.Duration ttl = 4;
+}
+
+message ControlResultProto {
+    bool   accepted    = 1;
+    double readback    = 2;
+    google.protobuf.Timestamp readback_ts = 3;
+}
+
+message DriverHealthProto {
+    bool   healthy          = 1;
+    google.protobuf.Timestamp last_success = 2;
+    uint64 error_count      = 3;
+    string message          = 4;
+}
+
+// --- 请求/响应包装 ---
+
+message InitRequest   { DriverConfigProto cfg = 1; }
+message InitResponse  { string error = 1; }  // empty = success
+
+message DiscoverRequest  {}
+message AssetCandidateProto {
+    string path = 1;
+    map<string,string> meta = 2;
+    string type = 3;  // PRMT-017 R2: was missing in v1, mirrors driver.AssetCandidate.Type
+}
+message DiscoverResponse { repeated AssetCandidateProto candidates = 1; string error = 2; }
+
+message CollectRequest  {}
+message CollectResponse { repeated Sample samples = 1; string error = 2; }
+
+message SubscribeRequest  {}
+// SubscribeResponse carries one streamed Sample, or a terminal error
+// the server emits as its final message before closing the stream.
+// PRMT-017 R2: the v1 schema had no error field, which meant the
+// server's only way to signal driver.ErrNotSupported (or any other
+// typed driver error) was a gRPC status — the client could no longer
+// match it with errors.Is. The new error field is opt-in: when set,
+// the client must treat it as the call's terminal error and ignore
+// any sample on the same message; when empty, behaviour is unchanged.
+message SubscribeResponse {
+    Sample sample = 1;
+    string error  = 2;
+}
+
+message WriteRequest  { ControlCommandProto cmd = 1; }
+message WriteResponse { ControlResultProto result = 1; string error = 2; }
+
+message HealthRequest  {}
+message HealthResponse { DriverHealthProto health = 1; }
+
+// --- 服务定义 ---
+
+service DriverService {
+    rpc Init      (InitRequest)      returns (InitResponse);
+    rpc Discover  (DiscoverRequest)  returns (DiscoverResponse);
+    rpc Collect   (CollectRequest)   returns (CollectResponse);
+    rpc Subscribe (SubscribeRequest) returns (stream SubscribeResponse);
+    rpc Write     (WriteRequest)     returns (WriteResponse);
+    rpc Health    (HealthRequest)    returns (HealthResponse);
+}

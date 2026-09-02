@@ -1,0 +1,92 @@
+# CIOS 单位换算表 — 权威源（spec-002 §3 标准单位；点表 unit_in 必须出自本表）
+# 语义: 标准值 = 原始值 × factor + offset (线性换算; gateway 入库前执行)
+# unit_in == 标准单位本身时恒等换算, 无需在 accepts 中列出
+# 修改规则: PR 评审; 新厂家单位 = 加一行, 不改代码
+version: "0.1"
+
+units:
+  celsius:
+    accepts:
+      kelvin:     { factor: 1.0,        offset: -273.15 }
+      fahrenheit: { factor: 0.55555556, offset: -17.777778 }
+      decicelsius: { factor: 0.1, offset: 0 }       # 常见 Modbus 0.1°C 整数
+  lpm:
+    accepts:
+      m3ph:  { factor: 16.666667, offset: 0 }       # m³/h
+      m3pm:  { factor: 1000.0,    offset: 0 }       # m³/min
+      gpm:   { factor: 3.785412,  offset: 0 }       # US gallon/min
+  kpa:
+    accepts:
+      bar:   { factor: 100.0,     offset: 0 }
+      mpa:   { factor: 1000.0,    offset: 0 }
+      pa:    { factor: 0.001,     offset: 0 }
+      psi:   { factor: 6.894757,  offset: 0 }
+  percent:
+    accepts:
+      ratio: { factor: 100.0,     offset: 0 }       # 0–1 → 0–100
+  percent_rh:
+    accepts: {}
+  liter:
+    accepts:
+      m3:     { factor: 1000.0,   offset: 0 }
+      gallon: { factor: 3.785412, offset: 0 }
+  ampere:
+    accepts:
+      milliamp: { factor: 0.001, offset: 0 }
+      deciamp:  { factor: 0.1,   offset: 0 }
+  volt:
+    accepts:
+      millivolt: { factor: 0.001, offset: 0 }
+      decivolt:  { factor: 0.1,   offset: 0 }
+  watt:
+    accepts:
+      kw: { factor: 1000.0,    offset: 0 }
+      mw: { factor: 1000000.0, offset: 0 }
+  var:
+    accepts:
+      kvar: { factor: 1000.0, offset: 0 }
+  kwh:
+    accepts:
+      wh:  { factor: 0.001,  offset: 0 }
+      mwh: { factor: 1000.0, offset: 0 }
+  hertz:
+    accepts:
+      decihertz: { factor: 0.1, offset: 0 }
+  mhz:
+    accepts:
+      ghz:   { factor: 1000.0,    offset: 0 }
+      hertz: { factor: 0.000001,  offset: 0 }
+  ratio:
+    accepts:
+      percent: { factor: 0.01, offset: 0 }
+  milliohm:
+    accepts:
+      ohm:      { factor: 1000.0, offset: 0 }
+      microohm: { factor: 0.001,  offset: 0 }
+  rpm:
+    accepts: {}
+  hour:
+    accepts:
+      minute: { factor: 0.016666667, offset: 0 }
+  mm_per_s:
+    accepts: {}
+  meter:
+    accepts:
+      millimeter: { factor: 0.001, offset: 0 }
+      centimeter: { factor: 0.01,  offset: 0 }
+  bytes:
+    accepts:
+      kib: { factor: 1024.0,       offset: 0 }
+      mib: { factor: 1048576.0,    offset: 0 }
+      gib: { factor: 1073741824.0, offset: 0 }
+  bps:
+    accepts:
+      kbps: { factor: 1000.0,       offset: 0 }
+      mbps: { factor: 1000000.0,    offset: 0 }
+      gbps: { factor: 1000000000.0, offset: 0 }
+  count:
+    accepts: {}
+  enum:
+    accepts: {}    # 枚举不换算, 走 enum_map (spec-002 §6)
+  l_per_kwh:
+    accepts: {}

@@ -1,0 +1,15 @@
+# Demo alarm seed for M0 end-to-end smoke (PRMT-013 §4.5).
+# Loaded by cios-core at startup via -seed-alarms. fileStore.SeedAlarms
+# upserts by ID, so re-running the demo produces no duplicates.
+- id: alm-demo-001
+  path: site01.pod000.cdu000.leak
+  severity: critical
+  state: firing
+  summary: leak detected (demo seed)
+  since: 2026-06-12T00:00:00Z
+- id: alm-demo-002
+  path: site01.pod000.cdu000.status
+  severity: info
+  state: resolved
+  summary: device boot (demo seed)
+  since: 2026-06-12T00:00:00Z

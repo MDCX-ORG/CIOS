@@ -1,0 +1,18 @@
+# Grafana dashboard provider for the M0 demo (PRMT-013).
+#
+# Tells Grafana where to find dashboards on disk. Bind-mounted as
+# /var/lib/grafana/dashboards inside the container. Each *.json file
+# in that directory is loaded on startup.
+apiVersion: 1
+
+providers:
+  - name: 'cios-edge'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: false
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: false

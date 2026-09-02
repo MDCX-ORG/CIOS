@@ -1,0 +1,17 @@
+{
+  "name": "cios-web",
+  "version": "0.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=22 <23",
+    "pnpm": ">=9 <10"
+  },
+  "packageManager": "pnpm@9.15.0",
+  "scripts": {
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm -r lint",
+    "build": "pnpm --filter ops-portal build && pnpm --filter customer-portal build",
+    "build:ops": "pnpm --filter ops-portal build",
+    "build:customer": "pnpm --filter customer-portal build"
+  }
+}

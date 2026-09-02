@@ -1,0 +1,3 @@
+version: "0.1"
+types:
+  pod: { parents: [site], level: device }

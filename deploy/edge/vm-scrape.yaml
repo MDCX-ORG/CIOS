@@ -1,0 +1,32 @@
+# VictoriaMetrics scrape config for site-derived views (PRMT-095 / E2.2 P522).
+#
+# Loaded by the victoriametrics container via:
+#   -promscrape.config=/etc/cios/vm-scrape.yaml
+# (mount + flag wired in deploy/edge/docker-compose.yml).
+#
+# Why a dedicated scrape job: cios-core exposes GET /v1/capacity/metrics
+# as a Prometheus text endpoint (PRMT-056); grafana + this scrape
+# feed the capacity dashboard (deploy/edge/grafana/dashboards/capacity.json)
+# with power/cooling headroom and the `cios_capacity_degraded` flag.
+#
+# Auth: NONE. cios-core runs with `-allow-no-auth` in the demo stack
+# (deploy/edge/docker-compose.yml: cios-core command), so no
+# Authorization header is sent — the request is accepted as-is. Prod
+# viewer-token auth is a follow-up PRMT (spec-006 §5 viewer auth is
+# not delivered in M2). Do NOT add `bearer_token:` /
+# `bearer_token_file:` / `${ENV}` interpolation here: VictoriaMetrics
+# does not expand `${VAR}` inside promscrape YAML, and a
+# bearer_token_file path is a no-op without a compose `secrets:` block.
+
+scrape_configs:
+  - job_name: cios-core-capacity
+    metrics_path: /v1/capacity/metrics
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    scheme: http
+    static_configs:
+      - targets:
+          - cios-core:8080
+        labels:
+          site: site01
+          producer: cios-core

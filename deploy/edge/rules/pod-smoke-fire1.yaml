@@ -1,0 +1,16 @@
+# PRMT-027 §4 — Pod 烟雾 fire1/fire2 等级。
+# smoke 0..4（quantities.yaml，VESDA EXT-002/D20 对齐）：
+# 0 normal / 1 alert / 2 action / 3 fire1 / 4 fire2。
+# appliesTo=pod（pod 内机柜/浸没液槽顶部装吸气式烟感）。
+---
+kind: AlarmRule
+metadata:
+  name: pod-smoke-fire1
+  appliesTo: pod
+spec:
+  expr: "smoke >= 3"
+  for: 0s
+  severity: critical
+  annotations:
+    summary: "Pod 烟雾 fire1/fire2 等级（smoke >= 3 瞬时）"
+    runbook: "rb/pod-smoke-fire"

@@ -1,0 +1,5 @@
+version: "0.1"
+units:
+  celsius:
+    accepts:
+      fahrenheit: { factor: 0.5555556, offset: -17.7778 }

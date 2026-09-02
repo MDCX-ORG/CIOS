@@ -1,0 +1,15 @@
+# PRMT-027 §4 — Pod 门开告警。
+# door enum 0/1（quantities.yaml：0 closed / 1 open）。
+# 1 分钟未关即告警：合规要求柜门非授权超时即触发 minor。
+---
+kind: AlarmRule
+metadata:
+  name: pod-door-open
+  appliesTo: pod
+spec:
+  expr: "door == 1"
+  for: 1m
+  severity: minor
+  annotations:
+    summary: "Pod 门开（door=1 持续 1min 未关）"
+    runbook: "rb/pod-door-open"

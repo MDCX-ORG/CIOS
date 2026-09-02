@@ -1,0 +1,20 @@
+# CIOS 位置段定义 — 权威源（spec-002 §2 由本文件生成）
+# 点位地址中位置段顺序固定: loop → side → phase, 均可缺省 (缺省 = 整体量)
+version: "0.3"
+
+loop:
+  fws: { desc: "Facility Water System 一次侧(设施水)", index: optional }   # fws0/fws1 = 冗余回路
+  tcs: { desc: "Technology Cooling System 二次侧; 含 AC 系列浸没液回路(tank 侧统一用 tcs)", index: optional }
+
+side:
+  supply: { desc: "供水/进水; 风侧=送风 (EXT-002)" }
+  return: { desc: "回水/出水; 风侧=回风 (EXT-002)" }
+  input:  { desc: "电气输入端 (UPS 整流侧等, EXT-002/D21)" }
+  output: { desc: "电气输出端 (UPS 逆变侧等, EXT-002/D21)" }
+  # 规则: 水路温度强制带 side; 流速/压力建议带 side (缺失报 warning)
+
+phase:
+  l1: {}
+  l2: {}
+  l3: {}
+  n:  { desc: "中性线" }

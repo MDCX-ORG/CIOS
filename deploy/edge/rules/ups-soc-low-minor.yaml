@@ -1,0 +1,14 @@
+# PRMT-027 §4 — UPS 荷电状态偏低（minor 档）。
+# 40% 阈值在推荐区间下沿，触发预警给值班留出动作窗口。
+---
+kind: AlarmRule
+metadata:
+  name: ups-soc-low-minor
+  appliesTo: ups
+spec:
+  expr: "soc < 40"
+  for: 2m
+  severity: minor
+  annotations:
+    summary: "UPS 荷电状态偏低（soc < 40% 持续 2min）"
+    runbook: "rb/ups-soc-low-minor"

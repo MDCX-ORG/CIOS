@@ -1,0 +1,64 @@
+# vmalert recording rules for site-level derived quantities (PRMT-028 §4.1).
+#
+# SCOPE (R2-M8): per-instance deltat/heat/cop (host=[cdu, chiller]) are
+#   cios-rules's job, NOT this file. Adding them here would violate
+#   L23 (single source of derived-naming) and create two parallel
+#   projection paths.
+#
+# LOADED BY: deploy/edge/docker-compose.yml vmalert service; evaluated
+#   every 30s; remoteWrite writes back to victoriametrics:8428.
+#   Group-level `labels: { producer: "vmalert" }` is the vmalert-supported
+#   mechanism to stamp producer on every result series (R2-M5; vmalert
+#   has no `-remoteWrite.label` CLI flag). spec-006 §5.3 wire-audit
+#   obligation satisfied at M1 minimal.
+#
+# LABEL SHAPE (R2-M3 + R2-M4 + R3-M3):
+#   * site     — carried by `sum by (site, quality)`.
+#   * quality  — preserved end-to-end via `on(site, quality)` joins;
+#                satisfies spec-006 §5 L3 (派生量继承最差质量).
+#   * path     — stamped `path="{{ $labels.site }}"` on PUE and WUE
+#                only, per spec-002 §9 (站点级派生 path=site).
+#                itload / facilityload are intermediate aggregations
+#                consumed only by PUE/WUE; do not stamp `path` on them.
+#   * producer — group-level `labels: { producer: "vmalert" }` block.
+#
+# WUE EQUIVALENCE — read before changing either window (R2-M6 + R3-M4):
+#   quantities.yaml:wue.formula = "volume 差分 / IT 用电量" (windowed
+#   DIFFERENCE ratio). The implemented form is sum(rate)/sum(rate)
+#   (instantaneous-rate-of-sums ratio), which is dimensionally l/kWh
+#   but is a DIFFERENT PromQL operation:
+#     (a) rate/rate ≡ increase/increase ONLY when windows are the
+#         same length, both series share a base interval, and neither
+#         has a counter reset within the window.
+#     (b) sum(rate)/sum(rate) is NOT equivalent to rate/rate when
+#         the aggregated series count is > 1: scrape-timing drift
+#         or counter-reset timing differences across series surface
+#         as numeric drift between the two forms.
+#     (c) Any window-length change, switch to increase/increase, or
+#         switch to rate/rate single-series form requires re-validating
+#         both (a) and (b) simultaneously. PRMT-XXX-K (R3 §10) is
+#         the formal-equivalence review when M1 §3-6 lands.
+#
+# MULTI-SITE METERING (R2-M7): M1 single-site uses `asset_type="tou"`
+#   for itload and `asset_type="meter"` for facilityload. Record names
+#   are site-agnostic (cios_itload_watt / cios_facilityload_watt per
+#   L23); when a second site meters IT at PDU, fork this file or
+#   move to a site→selector template (PRMT-XXX-E).
+groups:
+  - name: site-derived
+    interval: 30s
+    labels:
+      producer: "vmalert"
+    rules:
+      - record: cios_itload_watt
+        expr: sum by (site, quality) (cios_power_watt{asset_type="tou"})
+      - record: cios_facilityload_watt
+        expr: sum by (site, quality) (cios_power_watt{asset_type="meter"})
+      - record: cios_pue_ratio
+        expr: cios_facilityload_watt / on(site, quality) group_left cios_itload_watt
+        labels:
+          path: "{{ $labels.site }}"
+      - record: cios_wue_l_per_kwh
+        expr: sum by (site, quality) (rate(cios_volume_liter{asset_type="watermeter"}[1h])) / on(site, quality) group_left sum by (site, quality) (rate(cios_energy_kwh{asset_type="meter", measure="energy"}[1h]))
+        labels:
+          path: "{{ $labels.site }}"

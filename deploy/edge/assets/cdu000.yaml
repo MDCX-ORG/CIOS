@@ -1,0 +1,12 @@
+# Demo asset for M0 end-to-end smoke (PRMT-013 §4.5).
+# Applied by `cios apply -f` in scripts/m0-smoke.sh.
+#
+# request_id is pinned so repeated demo runs hit the server's 24h
+# dedup table (PRMT-011 §4.2) and produce an idempotent 200 instead
+# of bumping resource_version.
+kind: Asset
+metadata:
+  path: site01.pod000.cdu000
+  request_id: m0-smoke-cdu000
+spec:
+  type: cdu

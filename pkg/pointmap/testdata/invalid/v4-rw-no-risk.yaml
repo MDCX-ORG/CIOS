@@ -1,0 +1,11 @@
+kind: PointMap
+metadata:
+  name: v4-rw-no-risk
+  driver: modbus-sim
+  appliesTo: cdu
+spec:
+  points:
+    - point: tcs.opening
+      register: 40011
+      access: rw
+      limits: { min: 0, max: 100 }

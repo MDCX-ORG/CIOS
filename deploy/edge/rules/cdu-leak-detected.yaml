@@ -1,0 +1,15 @@
+# PRMT-027 §4 — CDU 漏液检测。
+# spec-003 §2 + L57/L58：漏液 = critical、for=0s（瞬时 firing）。
+# leak enum {0:dry, 1:leak}（quantities.yaml）。
+---
+kind: AlarmRule
+metadata:
+  name: cdu-leak-detected
+  appliesTo: cdu
+spec:
+  expr: "leak == 1"
+  for: 0s
+  severity: critical
+  annotations:
+    summary: "CDU 漏液检测触发（leak=1 瞬时）"
+    runbook: "rb/cdu-leak"

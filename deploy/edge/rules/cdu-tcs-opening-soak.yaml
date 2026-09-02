@@ -1,0 +1,18 @@
+# PRMT-121 — §M2-1 soak driver rule (DORMANT unless CIOS_SOAK_MODE=1).
+# tcs.opening baseline=45; soak mode spikes it to 95 so this rule
+# fires (tcs.opening > 90), then drops back to 45 to recover. Not a
+# real plant threshold — exists only to exercise the alarm→ticket→
+# close loop repeatedly during soak. In normal runs the register
+# never crosses 90, so this rule is inert.
+---
+kind: AlarmRule
+metadata:
+  name: cdu-tcs-opening-soak
+  appliesTo: cdu
+spec:
+  expr: "tcs.opening > 90"
+  for: 0s
+  severity: minor
+  annotations:
+    summary: "M2 soak driver: tcs.opening spiked > 90 (synthetic, CIOS_SOAK_MODE only)"
+    runbook: "rb/soak-synthetic"

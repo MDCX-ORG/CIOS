@@ -1,0 +1,5 @@
+version: "0.1"
+types:
+  newtype: { parents: [rack], level: device }
+# unknown top-level key (should be rejected by check 5)
+nonsense: { foo: bar }

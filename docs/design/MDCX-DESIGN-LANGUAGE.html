@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MDCX Design Language v1.0</title>
+<style>
+/* ============================================================
+   MDCX Design Language v1.0 (2026-07-17)
+   This page IS the language demoing itself. Canonical values
+   mirror MDCX-DESIGN-LANGUAGE.md §3–§5 exactly.
+   Default theme = dark (Stage). Toggle = light (Console).
+   ============================================================ */
+:root {
+  /* surfaces — dark */
+  --x-surface-0: #000000;
+  --x-surface-1: #0A0A0A;
+  --x-surface-2: #111111;
+  --x-surface-3: #161616;
+  --x-surface-4: #222222;
+  /* ink — on dark */
+  --x-ink: #FFFFFF;
+  --x-ink-2: #E6E6E6;
+  --x-ink-3: #A3A3A3;
+  --x-ink-4: #737373;
+  /* lines */
+  --x-line-subtle: rgba(255,255,255,.06);
+  --x-line: rgba(255,255,255,.12);
+  --x-line-strong: rgba(255,255,255,.22);
+  /* brand chrome (mono invert) */
+  --x-brand: #FFFFFF;
+  --x-brand-ink: #000000;
+  /* X Blue accent */
+  --x-accent: #3B82F6;
+  --x-accent-hover: #5C97F8;
+  --x-accent-ink: #FFFFFF;
+  --x-accent-soft: rgba(59,130,246,.12);
+  /* status quartet */
+  --x-ok: #22C55E;
+  --x-warn: #EAB308;
+  --x-critical: #EF4444;
+  --x-info: #38BDF8;
+  /* thermal / metric */
+  --x-temp-supply: #7DD3FC;
+  --x-temp-return: #FB923C;
+  --x-metric-flow: #22D3EE;
+  /* geometry */
+  --x-radius-stage: 2px;
+  --x-radius-console: 6px;
+  --x-ease: linear;
+  --x-duration: 120ms;
+  --x-font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  --x-font-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
+html.light {
+  --x-surface-0: #FFFFFF;
+  --x-surface-1: #FAFAFA;
+  --x-surface-2: #F4F4F4;
+  --x-surface-3: #FFFFFF;
+  --x-surface-4: #EBEBEB;
+  --x-ink: #0A0A0A;
+  --x-ink-2: #1A1A1A;
+  --x-ink-3: #525252;
+  --x-ink-4: #737373;
+  --x-line-subtle: rgba(0,0,0,.06);
+  --x-line: rgba(0,0,0,.12);
+  --x-line-strong: rgba(0,0,0,.22);
+  --x-brand: #0A0A0A;
+  --x-brand-ink: #FFFFFF;
+  --x-accent: #1D4ED8;
+  --x-accent-hover: #1E40AF;
+  --x-accent-ink: #FFFFFF;
+  --x-accent-soft: rgba(29,78,216,.08);
+  --x-ok: #15803D;
+  --x-warn: #A16207;
+  --x-critical: #B91C1C;
+  --x-info: #0369A1;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--x-surface-1);
+  color: var(--x-ink);
+  font-family: var(--x-font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+  transition: background .2s, color .2s;
+}
+code, pre, .mono { font-family: var(--x-font-mono); }
+
+/* layout */
+.wrap { display: flex; max-width: 1280px; margin: 0 auto; }
+aside {
+  position: sticky; top: 0; align-self: flex-start;
+  width: 236px; flex-shrink: 0; height: 100vh; overflow-y: auto;
+  padding: 28px 16px; border-right: 1px solid var(--x-line);
+}
+main { flex: 1; min-width: 0; padding: 28px 40px 120px; }
+@media (max-width: 900px) { aside { display: none; } main { padding: 20px; } }
+
+aside .brand { font-weight: 700; font-size: 15px; letter-spacing: .02em; }
+aside .brand .xb { color: var(--x-accent); }
+aside .brand small { display: block; font-weight: 400; color: var(--x-ink-3); font-size: 11px; margin-top: 2px; letter-spacing: 0; }
+aside nav { margin-top: 20px; display: flex; flex-direction: column; gap: 1px; }
+aside nav a { color: var(--x-ink-3); text-decoration: none; font-size: 13px; padding: 5px 10px; border-radius: var(--x-radius-stage); }
+aside nav a:hover { background: var(--x-surface-3); color: var(--x-ink); }
+aside nav .grp { margin: 14px 0 4px; padding: 0 10px; font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--x-ink-4); }
+
+/* headings */
+h1 { font-size: 34px; letter-spacing: -.02em; margin: 0 0 4px; font-weight: 800; }
+h2 { font-size: 21px; letter-spacing: -.01em; margin: 64px 0 6px; padding-top: 18px; border-top: 1px solid var(--x-line); font-weight: 700; }
+h2 .sec { color: var(--x-ink-4); font-weight: 500; margin-right: 8px; font-variant-numeric: tabular-nums; }
+h3 { font-size: 15.5px; margin: 30px 0 6px; font-weight: 600; }
+p.lead { color: var(--x-ink-3); max-width: 68ch; margin-top: 0; }
+p, li { max-width: 76ch; }
+.meta { display: flex; gap: 14px; flex-wrap: wrap; margin: 14px 0 0; font-size: 12.5px; color: var(--x-ink-3); }
+.meta b { color: var(--x-ink); font-weight: 600; }
+b { color: var(--x-ink); }
+
+/* cards & tables */
+.card { border: 1px solid var(--x-line); border-radius: var(--x-radius-console); background: var(--x-surface-3); padding: 20px; margin: 14px 0; }
+table.spec { border-collapse: collapse; width: 100%; font-size: 13px; margin: 12px 0; }
+table.spec th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--x-ink-3); border-bottom: 1px solid var(--x-line); padding: 6px 10px; background: var(--x-surface-2); }
+table.spec td { border-top: 1px solid var(--x-line); padding: 7px 10px; vertical-align: top; }
+table.spec code { font-size: 12px; background: var(--x-surface-2); padding: 1px 5px; border-radius: 4px; }
+pre { background: var(--x-surface-2); border: 1px solid var(--x-line); border-radius: var(--x-radius-stage); padding: 12px 14px; font-size: 12.5px; line-height: 1.55; overflow-x: auto; margin: 10px 0; }
+pre em { font-style: normal; color: var(--x-ink-3); }
+code.inline { font-size: .88em; background: var(--x-surface-2); padding: 1px 5px; border-radius: 4px; }
+
+/* swatches */
+.swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin: 14px 0; }
+.sw { border: 1px solid var(--x-line); border-radius: var(--x-radius-stage); overflow: hidden; font-size: 11.5px; }
+.sw .chip { height: 52px; }
+.sw .lbl { padding: 7px 9px; }
+.sw .lbl b { display: block; font-weight: 600; font-size: 12px; }
+.sw .lbl code { color: var(--x-ink-3); font-size: 10.5px; }
+
+/* demos */
+.demo { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding: 18px; border: 1px dashed var(--x-line); border-radius: var(--x-radius-console); margin: 10px 0; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap; font-size: 13.5px; font-weight: 500; height: 34px; padding: 0 14px; border: 1px solid transparent; cursor: pointer; transition: background var(--x-duration) var(--x-ease), border-color var(--x-duration) var(--x-ease); font-family: inherit; }
+.btn:focus-visible { outline: 2px solid var(--x-accent); outline-offset: 2px; }
+.btn:disabled { opacity: .5; pointer-events: none; }
+.r-stage { border-radius: var(--x-radius-stage); }
+.r-console { border-radius: 4px; }
+.btn-primary { background: var(--x-brand); color: var(--x-brand-ink); }
+.btn-primary:hover { opacity: .9; }
+.btn-accent { background: var(--x-accent); color: var(--x-accent-ink); }
+.btn-accent:hover { background: var(--x-accent-hover); }
+.btn-outline { background: transparent; border-color: var(--x-line-strong); color: var(--x-ink); }
+.btn-outline:hover { background: var(--x-surface-4); }
+.btn-destructive { background: var(--x-critical); color: #fff; }
+.btn-ghost { background: transparent; color: var(--x-ink); }
+.btn-ghost:hover { background: var(--x-surface-4); }
+.btn-sm { height: 30px; padding: 0 11px; font-size: 12.5px; }
+.input { width: 220px; border: 1px solid var(--x-line-strong); background: var(--x-surface-2); color: var(--x-ink); border-radius: 4px; padding: 7px 10px; font-size: 13.5px; font-family: inherit; }
+.input.mono { font-family: var(--x-font-mono); font-size: 13px; }
+.input:focus-visible { outline: 2px solid var(--x-accent); outline-offset: 1px; }
+.field { display: flex; flex-direction: column; gap: 4px; font-size: 13px; }
+.field span { color: var(--x-ink-3); }
+
+/* alerts */
+.alert { display: flex; gap: 10px; align-items: flex-start; border: 1px solid; border-radius: 4px; padding: 10px 13px; font-size: 13.5px; width: 100%; max-width: 620px; }
+.alert .ic { flex-shrink: 0; margin-top: 1px; font-weight: 700; }
+.alert-critical { border-color: color-mix(in srgb, var(--x-critical) 45%, transparent); background: color-mix(in srgb, var(--x-critical) 9%, transparent); color: var(--x-critical); }
+.alert-ok { border-color: color-mix(in srgb, var(--x-ok) 45%, transparent); background: color-mix(in srgb, var(--x-ok) 10%, transparent); color: var(--x-ok); }
+.alert-warn { border-color: color-mix(in srgb, var(--x-warn) 50%, transparent); background: color-mix(in srgb, var(--x-warn) 10%, transparent); color: var(--x-warn); }
+.alert-info { border-color: color-mix(in srgb, var(--x-info) 45%, transparent); background: color-mix(in srgb, var(--x-info) 8%, transparent); color: var(--x-info); }
+
+/* pills */
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; border-radius: 999px; padding: 3px 10px; border: 1px solid; }
+.pill i { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+.pill-ok { color: var(--x-ok); border-color: color-mix(in srgb, var(--x-ok) 40%, transparent); background: color-mix(in srgb, var(--x-ok) 8%, transparent); } .pill-ok i { background: var(--x-ok); }
+.pill-warn { color: var(--x-warn); border-color: color-mix(in srgb, var(--x-warn) 45%, transparent); background: color-mix(in srgb, var(--x-warn) 8%, transparent); } .pill-warn i { background: var(--x-warn); }
+.pill-off { color: var(--x-ink-3); border-color: var(--x-line); background: var(--x-surface-2); } .pill-off i { background: var(--x-ink-3); }
+.pill-critical { color: var(--x-critical); border-color: color-mix(in srgb, var(--x-critical) 40%, transparent); background: color-mix(in srgb, var(--x-critical) 8%, transparent); } .pill-critical i { background: var(--x-critical); }
+
+/* data table */
+table.data { border-collapse: collapse; width: 100%; font-size: 13px; border: 1px solid var(--x-line); border-radius: var(--x-radius-console); overflow: hidden; }
+table.data thead th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--x-ink-3); background: var(--x-surface-2); padding: 8px 12px; border-bottom: 1px solid var(--x-line); }
+table.data td { padding: 8px 12px; border-top: 1px solid var(--x-line); }
+table.data tbody tr:hover { background: var(--x-surface-2); }
+
+/* do / don't */
+.dodont { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 12px 0; }
+@media (max-width: 800px) { .dodont { grid-template-columns: 1fr; } }
+.dd { border-radius: var(--x-radius-console); border: 1px solid var(--x-line); overflow: hidden; }
+.dd header { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; padding: 7px 13px; }
+.dd-do header { background: color-mix(in srgb, var(--x-ok) 12%, transparent); color: var(--x-ok); }
+.dd-dont header { background: color-mix(in srgb, var(--x-critical) 10%, transparent); color: var(--x-critical); }
+.dd .note { padding: 8px 13px; font-size: 12.5px; color: var(--x-ink-3); border-top: 1px solid var(--x-line); }
+.dd .body { padding: 14px; }
+
+/* callouts */
+.callout { border-left: 3px solid var(--x-accent); background: var(--x-accent-soft); padding: 10px 16px; border-radius: 0 var(--x-radius-console) var(--x-radius-console) 0; font-size: 13.5px; margin: 14px 0; }
+.callout.warn { border-left-color: var(--x-warn); background: color-mix(in srgb, var(--x-warn) 7%, transparent); }
+.callout b:first-child { display: block; margin-bottom: 2px; }
+.ref { font-size: 11.5px; color: var(--x-ink-3); font-family: var(--x-font-mono); }
+
+/* toggle */
+.toggle { position: fixed; top: 16px; right: 18px; z-index: 10; display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--x-line); background: var(--x-surface-3); color: var(--x-ink); border-radius: 999px; padding: 7px 15px; font-size: 12.5px; font-weight: 600; cursor: pointer; font-family: inherit; }
+
+/* type ramp demo */
+.ts { display: grid; grid-template-columns: 150px 120px 1fr; gap: 6px 16px; align-items: baseline; font-size: 13px; margin: 12px 0; }
+.ts code { color: var(--x-ink-3); font-size: 11.5px; }
+
+/* logo demo */
+.logodemo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
+@media (max-width: 800px) { .logodemo { grid-template-columns: 1fr; } }
+.logocell { border: 1px solid var(--x-line); border-radius: var(--x-radius-stage); padding: 32px; display: flex; align-items: center; justify-content: center; min-height: 120px; }
+.logocell img { max-width: 220px; width: 100%; height: auto; }
+.wordmark { font-weight: 800; font-size: 34px; letter-spacing: .04em; }
+.wordmark .xb { color: var(--x-accent); }
+
+/* stage scaffold demo */
+.stagecard { background: var(--x-surface-0); border: 1px solid var(--x-line); border-radius: var(--x-radius-stage); padding: 40px 36px; margin: 14px 0; }
+.sec-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .12em; text-transform: uppercase; color: var(--x-ink-3); margin: 0 0 10px; }
+.sec-title { font-size: 32px; font-weight: 700; letter-spacing: -.02em; margin: 0 0 10px; line-height: 1.15; }
+.sec-lead { font-size: 17px; color: var(--x-ink-2); max-width: 68ch; margin: 0 0 22px; }
+.statband { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; border-top: 1px solid var(--x-line); padding-top: 22px; }
+@media (max-width: 800px) { .statband { grid-template-columns: repeat(2, 1fr); } }
+.stat b { display: block; font-size: 32px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
+.stat span { font-size: 12px; color: var(--x-ink-3); text-transform: uppercase; letter-spacing: .06em; }
+kbd { font-family: var(--x-font-mono); font-size: 11px; border: 1px solid var(--x-line); border-bottom-width: 2px; border-radius: 4px; padding: 1px 5px; background: var(--x-surface-2); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } html { scroll-behavior: auto; } }
+</style>
+</head>
+<body>
+<div role="note" style="padding:12px 16px;margin:0;border-bottom:2px solid #F87171;background:rgba(248,113,113,.12);color:inherit;font:600 13px/1.5 Inter,ui-sans-serif,system-ui,sans-serif;">
+  This self-demo renders v1.0 values and is superseded. Authority: MDC repo docs (Theme v2.0) + MDCX-DESIGN-LANGUAGE.md in this directory.
+</div>
+<button class="toggle" onclick="document.documentElement.classList.toggle('light'); this.querySelector('span').textContent = document.documentElement.classList.contains('light') ? 'Light (Console)' : 'Dark (Stage)';">
+  ◐ <span>Dark (Stage)</span> — click to flip
+</button>
+
+<div class="wrap">
+<aside>
+  <div class="brand">MDC<span class="xb">X</span> Design Language<small>v1.0 · 2026-07-17 · docs/</small></div>
+  <nav>
+    <div class="grp">Foundation</div>
+    <a href="#decisions">0 · Decision record</a>
+    <a href="#brand">1 · Brand &amp; logo</a>
+    <a href="#principles">2 · Principles</a>
+    <a href="#color">3 · Color</a>
+    <a href="#type">4 · Typography</a>
+    <a href="#layout">5 · Layout &amp; geometry</a>
+    <div class="grp">Components</div>
+    <a href="#buttons">6.1 · Buttons</a>
+    <a href="#alerts">6.2 · Alerts</a>
+    <a href="#pills">6.3 · Status pills</a>
+    <a href="#tables">6.4 · Data tables</a>
+    <a href="#forms">6.5 · Forms</a>
+    <a href="#stage">6.6 · Stage scaffold</a>
+    <div class="grp">System</div>
+    <a href="#motion">7 · Motion</a>
+    <a href="#icons">8 · Icons &amp; data-viz</a>
+    <a href="#voice">9 · Voice &amp; tone</a>
+    <a href="#a11y">10 · Accessibility</a>
+    <a href="#tokens">11 · Token bindings</a>
+    <a href="#adoption">12 · Adoption map</a>
+  </nav>
+</aside>
+
+<main>
+<h1>MDC<span style="color:var(--x-accent)">X</span> Design Language</h1>
+<p class="lead">One language for every MDCX surface: the marketing site (Stage) and the CIOS portals (Console). Mono base, one signal — X Blue, rationed the way the logo rations it. This page demos itself: flip the theme toggle; everything survives both themes because it only uses tokens.</p>
+<div class="meta">
+  <span>Authority: <b>this document</b></span>
+  <span>Markdown twin: <b>MDCX-DESIGN-LANGUAGE.md</b></span>
+  <span>Logo source: <b>MDC/LOGO/</b></span>
+  <span>Supersedes: <b>mono-only doctrine · CIOS §2.3 proposal</b></span>
+</div>
+
+<h2 id="decisions"><span class="sec">0</span>Decision record</h2>
+<table class="spec">
+  <thead><tr><th>#</th><th>Conflict</th><th>Resolution</th></tr></thead>
+  <tbody>
+    <tr><td><b>D1</b></td><td>MDC site was strictly monochrome ("never a third hue"); the MDCX logo carries a blue X-stroke</td><td><b>Mono base + exactly one accent: X Blue.</b> Blue is a rationed signal — one stroke, not a wash. See §1.2.</td></tr>
+    <tr><td><b>D2</b></td><td>Radius: MDC 2px vs CIOS 8px</td><td><b>Stage = 2px, Console = 6px</b> (4px inner). One chamfered-sharp geometry principle, two densities. 8px retired.</td></tr>
+    <tr><td><b>D3</b></td><td>Token format: hex <code>--mdc-*</code> vs shadcn HSL</td><td><b>Canonical values live here; each codebase keeps its native binding.</b> No cross-repo renames. See §11.</td></tr>
+  </tbody>
+</table>
+<p>Brand naming: the operating brand is <b>MDCX</b>. DC45, AC40/AC45, A32 (hardware) and CIOS (software) are product names under it. Site chrome "M · MDC" is retired (§12).</p>
+
+<h2 id="brand"><span class="sec">1</span>Brand &amp; logo</h2>
+<div class="logodemo">
+  <div class="logocell" style="background:#FFFFFF"><img src="../LOGO/MDCX%20Light.png" alt="MDCX wordmark, dark on light"></div>
+  <div class="logocell" style="background:#04060C"><img src="../LOGO/MDC%20DARK.png" alt="MDCX wordmark, white on dark"></div>
+</div>
+<table class="spec">
+  <thead><tr><th>Rule</th><th>Detail</th></tr></thead>
+  <tbody>
+    <tr><td>Assets</td><td><code>MDC/LOGO/MDCX Light.png</code> (dark mark → light bg) · <code>MDC/LOGO/MDC DARK.png</code> (white mark → dark bg). Use supplied files only.</td></tr>
+    <tr><td>Integrity</td><td>Never recolor, outline, shadow, gradient, skew, or set the whole mark in blue. The X-stroke is the only blue.</td></tr>
+    <tr><td>Clearspace</td><td>Padding all sides ≥ height of the "M". Min width 96px web / 24mm print.</td></tr>
+    <tr><td>Backgrounds</td><td>Solid surface-0 or white only. Never mid-grey or over imagery without a backing panel.</td></tr>
+    <tr><td>In text</td><td>Body copy writes "MDCX" as plain caps — no letterform styling, no colored X in prose. (UI chrome like the sidebar brand of this page may color the X.)</td></tr>
+  </tbody>
+</table>
+<h3>1.2 The X principle (accent rationing)</h3>
+<div class="callout"><b>Per view region, at most one X Blue moment.</b> The primary CTA on a marketing section · the active nav item in the console · the selected node on a canvas. Everything else is mono ink. X Blue is never body text, borders-at-rest, large backgrounds, decoration, or a status color.</div>
+
+<h2 id="principles"><span class="sec">2</span>Principles</h2>
+<p><b>1 · Mono base, one signal.</b> Near-black and white carry the brand; X Blue is rationed per §1.2. If everything is highlighted, nothing is.</p>
+<p><b>2 · Two surfaces, one language.</b> <b>Stage</b> (marketing/investor): dark, cinematic, editorial, 2px. <b>Console</b> (CIOS portals): light-default + dark, dense, calm, 6px. Same palette, type, voice, status system.</p>
+<p><b>3 · Engineering truth.</b> Real numbers beat adjectives ("1,240 kW", not "powerful"). Identifiers are monospace, always: <code class="inline">sgp01.pod002.cdu000.fws.supply.flow</code>. State is honest — real upstream errors, <code class="inline">Roadmap</code> labels on unshipped capability, async lifecycles instead of bare spinners.</p>
+<p><b>4 · Token-only color.</b> Every color resolves to a §3 token. Raw palette classes and hex literals in page code are forbidden in both repos.</p>
+<p><b>5 · Dense but calm.</b> Consoles show one screen of high-density truth; density comes from a consistent scale, not ad-hoc shrinking. Stage shows one idea per viewport.</p>
+<p><b>6 · Sharp geometry.</b> Chamfered, near-sharp corners echo the wordmark. Nothing pill-shaped except status pills. No blobs, no large radii, no glassmorphism.</p>
+
+<h2 id="color"><span class="sec">3</span>Color</h2>
+<h3>3.1 Surfaces &amp; ink (current theme)</h3>
+<div class="swatches">
+  <div class="sw"><div class="chip" style="background:var(--x-surface-0);border-bottom:1px solid var(--x-line)"></div><div class="lbl"><b>surface-0</b><code>hero / deepest</code></div></div>
+  <div class="sw"><div class="chip" style="background:var(--x-surface-1);border-bottom:1px solid var(--x-line)"></div><div class="lbl"><b>surface-1</b><code>body</code></div></div>
+  <div class="sw"><div class="chip" style="background:var(--x-surface-2)"></div><div class="lbl"><b>surface-2</b><code>section</code></div></div>
+  <div class="sw"><div class="chip" style="background:var(--x-surface-3);border-bottom:1px solid var(--x-line)"></div><div class="lbl"><b>surface-3</b><code>card</code></div></div>
+  <div class="sw"><div class="chip" style="background:var(--x-surface-4)"></div><div class="lbl"><b>surface-4</b><code>raised / hover</code></div></div>
+  <div class="sw"><div class="chip" style="background:var(--x-ink)"></div><div class="lbl"><b>ink-primary</b><code>headings / body</code></div></div>
+  <div class="sw"><div class="chip" style="background:var(--x-ink-3)"></div><div class="lbl"><b>ink-tertiary</b><code>the only grey</code></div></div>
+  <div class="sw"><div class="chip" style="background:var(--x-line-strong)"></div><div class="lbl"><b>line-strong</b><code>inputs / emphasis</code></div></div>
+</div>
+<p>Elevation = surface step + border. The ink ramp (primary → secondary → tertiary → muted) is the only grey text allowed.</p>
+
+<h3>3.2 X Blue</h3>
+<div class="swatches">
+  <div class="sw"><div class="chip" style="background:var(--x-accent)"></div><div class="lbl"><b>accent</b><code>#3B82F6 dark · #1D4ED8 light</code></div></div>
+  <div class="sw"><div class="chip" style="background:var(--x-accent-hover)"></div><div class="lbl"><b>accent-hover</b><code>#5C97F8 · #1E40AF</code></div></div>
+  <div class="sw"><div class="chip" style="background:var(--x-accent-soft)"></div><div class="lbl"><b>accent-soft</b><code>≤12% tint fills</code></div></div>
+</div>
+<p>Chrome primary buttons stay <b>mono-invert</b> on Stage; X Blue may replace mono on <i>the one</i> primary CTA per page — never both patterns on one page. Console: primary stays mono; X Blue marks active nav, selection, links, and focus rings.</p>
+
+<h3>3.3 Status quartet (machine truth only)</h3>
+<div class="swatches">
+  <div class="sw"><div class="chip" style="background:var(--x-ok)"></div><div class="lbl"><b>ok</b><code>#22C55E · #15803D</code></div></div>
+  <div class="sw"><div class="chip" style="background:var(--x-warn)"></div><div class="lbl"><b>warn</b><code>#EAB308 · #A16207</code></div></div>
+  <div class="sw"><div class="chip" style="background:var(--x-critical)"></div><div class="lbl"><b>critical</b><code>#EF4444 · #B91C1C</code></div></div>
+  <div class="sw"><div class="chip" style="background:var(--x-info)"></div><div class="lbl"><b>info</b><code>#38BDF8 · #0369A1</code></div></div>
+</div>
+<p>Reserved for alarms, health, lifecycle, telemetry. Never branding, decoration, or CTAs. These values <b>supersede the CIOS §2.3 proposal</b> — adopt in <code class="inline">globals.css</code> (<code class="inline">:root</code> + <code class="inline">.dark</code>) and the Tailwind preset. Fills at 8–12% tint, borders 40–50%.</p>
+<p>Thermal/metric palette for diagrams only: <span class="mono" style="color:var(--x-temp-supply)">supply #7DD3FC</span> · <span class="mono" style="color:var(--x-temp-return)">return #FB923C</span> · <span class="mono" style="color:var(--x-metric-flow)">flow #22D3EE</span> · heat = critical · power = ink.</p>
+
+<h2 id="type"><span class="sec">4</span>Typography</h2>
+<p>One family system everywhere: <b>Inter</b> + <b>ui-monospace</b> stack. No third typeface.</p>
+<h3>4.1 Stage ramp</h3>
+<div class="ts">
+  <span style="font-size:44px;font-weight:800;letter-spacing:-.03em;line-height:1">Hero</span><code>clamp(40–88px)/800</code><span>One per page.</span>
+  <span style="font-size:32px;font-weight:700;letter-spacing:-.02em">Section</span><code>28–36px/700</code><span><code>.sec-title</code></span>
+  <span style="font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--x-ink-3)">Eyebrow</span><code>12px/600/+.12em</code><span>Section numbers, labels.</span>
+  <span style="font-size:17px;color:var(--x-ink-2)">Lead</span><code>17–19px/400</code><span>Max 68ch.</span>
+  <span style="font-size:36px;font-weight:700;font-variant-numeric:tabular-nums">1,240</span><code>32–44px tabular</code><span>Stat values.</span>
+</div>
+<h3>4.2 Console ramp (five steps)</h3>
+<div class="ts">
+  <span style="font-size:30px;font-weight:700;letter-spacing:-.02em">Title</span><code>text-3xl/700</code><span>Page title only.</span>
+  <span style="font-size:21px;font-weight:600">Section</span><code>text-xl/600</code><span>Rare.</span>
+  <span style="font-size:15.5px;font-weight:600">Card head</span><code>font-semibold</code><span>The workhorse heading.</span>
+  <span style="font-size:13.5px">Body</span><code>text-sm</code><span>Default UI text.</span>
+  <span style="font-size:11.5px">Caption</span><code>text-xs</code><span>Table headers (uppercase + tracking), meta, pills.</span>
+</div>
+<h3>4.3 Mono rules (both surfaces)</h3>
+<table class="spec">
+  <thead><tr><th>Content</th><th>Treatment</th><th>Example</th></tr></thead>
+  <tbody>
+    <tr><td>Paths / cpaths</td><td><code>font-mono text-sm</code></td><td><span class="mono">sgp01.pod002.cdu000.fws.supply.flow</span></td></tr>
+    <tr><td>Ids, slugs, scopes</td><td><code>font-mono text-xs</code></td><td><span class="mono" style="font-size:12px">og_9f2k · svc:lab-operator · sgp01.**</span></td></tr>
+    <tr><td>Timestamps, versions</td><td><code>font-mono text-xs</code> muted</td><td><span class="mono" style="font-size:12px;color:var(--x-ink-3)">2026-07-17T02:10:00Z</span></td></tr>
+    <tr><td>Numeric columns</td><td><code>tabular-nums text-right</code></td><td>Right-align counts and sizes.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="layout"><span class="sec">5</span>Layout &amp; geometry</h2>
+<table class="spec">
+  <thead><tr><th>Rule</th><th>Value</th></tr></thead>
+  <tbody>
+    <tr><td>Spacing scale</td><td>4 / 8 / 12 / 16 / 24 / 40 px (+64/96 for Stage vertical rhythm). Never off-scale.</td></tr>
+    <tr><td>Containers</td><td>Content 1120px · wide 1600px · prose 68–76ch.</td></tr>
+    <tr><td>Radius</td><td><b>Stage 2px</b> everything · <b>Console 6px</b> outer, 4px inner (buttons/inputs) · pills 999px only exception.</td></tr>
+    <tr><td>Elevation</td><td>Surface step + border. Shadows near-zero (max <code>0 2px 10px @ 8%</code> for floating chrome).</td></tr>
+    <tr><td>Shell</td><td>Fixed header 56px, MDCX wordmark, one context CTA. Console sidebar: active item = X Blue text + 2px left rule (the console's one accent moment).</td></tr>
+  </tbody>
+</table>
+
+<h2 id="buttons"><span class="sec">6.1</span>Buttons</h2>
+<p>Stage geometry (2px):</p>
+<div class="demo">
+  <button class="btn btn-primary r-stage">Model your return</button>
+  <button class="btn btn-accent r-stage">Explore CIOS →</button>
+  <button class="btn btn-outline r-stage">View solutions</button>
+  <button class="btn btn-ghost r-stage">Back</button>
+</div>
+<p>Console geometry (4px inner), from <code class="inline">@cios/ui</code>:</p>
+<div class="demo">
+  <button class="btn btn-primary r-console">Save layout</button>
+  <button class="btn btn-outline r-console">Preview conform</button>
+  <button class="btn btn-destructive r-console">Delete binding</button>
+  <button class="btn btn-ghost r-console">Cancel</button>
+  <button class="btn btn-primary r-console" disabled>Saving…</button>
+  <button class="btn btn-outline r-console btn-sm">sm — table rows</button>
+</div>
+<table class="spec">
+  <thead><tr><th>Variant</th><th>When</th></tr></thead>
+  <tbody>
+    <tr><td><code>primary</code> (mono-invert)</td><td>The single primary action of a form/card/section. One per region.</td></tr>
+    <tr><td><code>accent</code> (X Blue)</td><td>Only as the page's one accent moment (§1.2). Replaces — never joins — mono primary on that page.</td></tr>
+    <tr><td><code>outline</code></td><td>Secondary: preview, dry-run, export.</td></tr>
+    <tr><td><code>destructive</code></td><td>Irreversible writes; pairs with two-step confirm / preview-first gating (CIOS guideline §6, unchanged).</td></tr>
+    <tr><td><code>ghost</code></td><td>Tertiary, inline table actions.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="alerts"><span class="sec">6.2</span>Alerts</h2>
+<div class="demo" style="flex-direction:column;align-items:stretch">
+  <div class="alert alert-critical"><span class="ic">✕</span><span><b>Load failed:</b> 502: upstream error — core returned Bad Gateway</span></div>
+  <div class="alert alert-ok"><span class="ic">✓</span><span>Saved. Role binding <span class="mono">svc:lab-operator → sgp01.**</span> is active.</span></div>
+  <div class="alert alert-warn"><span class="ic">!</span><span>Layout not found — starting empty layout for <span class="mono">sgp02</span>.</span></div>
+  <div class="alert alert-info"><span class="ic">i</span><span>Dry-run below — nothing written. 4 proposals, 1 skipped.</span></div>
+</div>
+<p>Placement under the heading, above the form. Outcome first, upstream detail verbatim. <code class="inline">role="alert"</code> on error/warn, <code class="inline">role="status"</code> on success/info.</p>
+
+<h2 id="pills"><span class="sec">6.3</span>Status pills</h2>
+<div class="demo">
+  <span class="pill pill-ok"><i></i>ready</span>
+  <span class="pill pill-warn"><i></i>pending_conform</span>
+  <span class="pill pill-off"><i></i>unavailable</span>
+  <span class="pill pill-critical"><i></i>error</span>
+  <span class="pill pill-ok"><i></i>● available</span>
+</div>
+<p>Backend-state mapping is normative on both surfaces: ready/ok/active → ok · pending/queued/running → warn · unavailable/unknown → neutral · error/fail → critical. A pill on the marketing status strip and a pill in ops-portal look identical.</p>
+
+<h2 id="tables"><span class="sec">6.4</span>Data tables</h2>
+<table class="data">
+  <thead><tr><th>Model</th><th>Type</th><th>Status</th><th style="text-align:right">Lint fail</th><th></th></tr></thead>
+  <tbody>
+    <tr><td class="mono" style="font-weight:600">DC45</td><td class="mono" style="font-size:12px">pod</td><td><span class="pill pill-ok"><i></i>ready</span></td><td class="mono" style="text-align:right">0</td><td style="text-align:right"><button class="btn btn-ghost btn-sm r-console">Open</button></td></tr>
+    <tr><td class="mono" style="font-weight:600">AC45</td><td class="mono" style="font-size:12px">pod</td><td><span class="pill pill-warn"><i></i>pending_conform</span></td><td class="mono" style="text-align:right">3</td><td style="text-align:right"><button class="btn btn-ghost btn-sm r-console">Open</button></td></tr>
+  </tbody>
+</table>
+<p>Header caption-type on surface-2; hover surface-2; empty states say <i>why + what to do</i>; &gt;50 rows → client filter (mono, matches id/path); &gt;500 → server pagination.</p>
+
+<h2 id="forms"><span class="sec">6.5</span>Forms</h2>
+<div class="demo">
+  <label class="field"><span>Site slug</span><input class="input mono" placeholder="sgp01"></label>
+  <label class="field"><span>Org id</span><input class="input mono" placeholder="og_…"></label>
+  <label class="field" style="justify-content:flex-end"><span>&nbsp;</span><button class="btn btn-primary r-console">Attach / re-home</button></label>
+</div>
+<p>Label-above-input · grammar in placeholder · <code class="inline">pattern=</code> mirrors of server grammar · vocabulary fields fed from API, never hardcoded · identifier inputs mono, display names sans.</p>
+
+<h2 id="stage"><span class="sec">6.6</span>Stage scaffold</h2>
+<div class="stagecard">
+  <p class="sec-eyebrow">02 · Software · CIOS</p>
+  <p class="sec-title">The operating system of the AI Factory.</p>
+  <p class="sec-lead">DCIM watches UPS, cooling, racks. CIOS watches what pays: utilization, PUE, cost, revenue.</p>
+  <div style="display:flex;gap:10px;margin-bottom:26px">
+    <button class="btn btn-accent r-stage">Explore CIOS →</button>
+    <button class="btn btn-outline r-stage">How it works</button>
+  </div>
+  <div class="statband">
+    <div class="stat"><b>1 box</b><span>to start</span></div>
+    <div class="stat"><b>≥7 days</b><span>offline autonomy</span></div>
+    <div class="stat"><b>2</b><span>shipped drivers</span></div>
+    <div class="stat"><b>Open-core</b><span>Apache-2.0</span></div>
+  </div>
+</div>
+<p>Order: <code class="inline">.sec-eyebrow</code> → <code class="inline">.sec-title</code> → <code class="inline">.sec-lead</code> → content. Stat bands: 4 stats max. One idea per viewport; one accent moment per page.</p>
+
+<h2 id="motion"><span class="sec">7</span>Motion</h2>
+<table class="spec">
+  <thead><tr><th>Surface</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Stage</td><td>120ms / linear. Hovers = opacity/underline/border shifts, not transforms. Scroll-snap native.</td></tr>
+    <tr><td>Console</td><td>150ms / ease-out. Async = lifecycle pill + verb-specific label ("Saving…", "Linting…" — never "…").</td></tr>
+    <tr><td>Forbidden</td><td>Parallax, auto-playing loops, skeleton shimmer &gt;1.2s.</td></tr>
+    <tr><td>Reduced motion</td><td><code>prefers-reduced-motion</code>: all non-essential transitions off (this page complies).</td></tr>
+  </tbody>
+</table>
+
+<h2 id="icons"><span class="sec">8</span>Icons &amp; data-viz</h2>
+<p>Stroke icons only (lucide or equivalent), 1.5px stroke, 16/20px grid, ink colors. No filled, duotone, or emoji icons in product UI — Stage emoji card icons (🏗️💧🌊) are grandfathered until the next solutions.html redesign, then replaced with stroke glyphs.</p>
+<p>Charts: mono greys for context series, X Blue for <i>the</i> series, status colors only for threshold breaches. Grid lines <code class="inline">line-subtle</code>, axis labels caption type, thermal palette per §3.3 for cooling diagrams.</p>
+
+<h2 id="voice"><span class="sec">9</span>Voice &amp; tone</h2>
+<div class="dodont">
+  <div class="dd dd-do"><header>Do</header><div class="body">"≤6 months to revenue. 1,240 kW per block. ≥7 days offline autonomy."<br><br>"GPU-level telemetry — <span class="pill pill-off" style="vertical-align:middle"><i></i>Roadmap</span>"</div><div class="note">Numbers first. Unshipped capability labeled.</div></div>
+  <div class="dd dd-dont"><header>Don't</header><div class="body">"Blazingly fast time to market!"<br><br>"Industry-leading AI-powered autonomous operations."</div><div class="note">Superlatives without numbers; aspirational present tense; exclamation marks.</div></div>
+</div>
+<p>Sentence case everywhere except eyebrows/table headers and product names (DC45, CIOS, MDCX). English on all surfaces. Error copy: outcome first, upstream detail verbatim, then the action.</p>
+
+<h2 id="a11y"><span class="sec">10</span>Accessibility</h2>
+<table class="spec">
+  <thead><tr><th>Requirement</th><th>Rule</th></tr></thead>
+  <tbody>
+    <tr><td>Contrast</td><td>AA: 4.5:1 body, 3:1 large text/UI — both themes. §3 pairs are pre-checked; don't tint below specified percentages.</td></tr>
+    <tr><td>Focus</td><td>2px X Blue ring, 2px offset, on every interactive element. Never removed.</td></tr>
+    <tr><td>Keyboard</td><td>All CRUD keyboard-reachable; canvas ops mirrored in tables; <kbd>Esc</kbd> cancels modes.</td></tr>
+    <tr><td>Semantics</td><td><code>role="alert|status"</code> on feedback; <code>aria-current="page"</code> on active nav; labels wrap inputs; icon-only buttons get <code>aria-label</code>.</td></tr>
+  </tbody>
+</table>
+
+<h2 id="tokens"><span class="sec">11</span>Token bindings</h2>
+<p>Canonical values live in this document (§3–§5). Each codebase keeps its native names:</p>
+<table class="spec">
+  <thead><tr><th>Semantic role</th><th>MDC site (tokens.css)</th><th>CIOS (globals.css / preset)</th></tr></thead>
+  <tbody>
+    <tr><td>surfaces 0–4</td><td><code>--mdc-surface-0…4</code> unchanged</td><td><code>--background --card --muted</code> re-tuned to §3.1</td></tr>
+    <tr><td>ink ramp</td><td><code>--mdc-ink-*</code> unchanged</td><td><code>--foreground --muted-foreground</code></td></tr>
+    <tr><td>lines</td><td><code>--mdc-line*</code> unchanged</td><td><code>--border --input</code></td></tr>
+    <tr><td>brand chrome</td><td><code>--mdc-brand</code> (mono invert) unchanged</td><td><code>--primary / --primary-foreground</code></td></tr>
+    <tr><td><b>accent (X Blue)</b></td><td><b><code>--mdc-accent -hover -ink -soft</code> NEW</b></td><td><b><code>--accent</code> + <code>--ring</code> re-pointed to X Blue</b></td></tr>
+    <tr><td>status quartet</td><td><code>--mdc-ok/warn/critical/info</code> (§3.3 values)</td><td><code>--success --warning --info</code> (+bg) NEW · <code>--destructive</code></td></tr>
+    <tr><td>radius</td><td><code>--mdc-radius: 2px</code> unchanged</td><td><code>--radius: 0.5rem → 0.375rem</code></td></tr>
+    <tr><td>fonts</td><td><code>--mdc-font-sans/mono</code> unchanged</td><td>add Inter to portal stack</td></tr>
+  </tbody>
+</table>
+<div class="callout warn"><b>Closed namespace</b>No new <code class="inline">--fog-*</code> keys (alias layer frozen). No parallel token systems. A color with no row here does not exist.</div>
+
+<h2 id="adoption"><span class="sec">12</span>Adoption map</h2>
+<h3>MDC site (each step ships alone)</h3>
+<table class="spec">
+  <thead><tr><th>#</th><th>Change</th><th>Files</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Add <code>--mdc-accent*</code> tokens (dark + light blocks); update header comment: brand = MDCX, mono + X Blue</td><td>design-system/tokens.css</td></tr>
+    <tr><td>2</td><td>Replace "M · MDC" text logo with MDCX wordmark; produce trimmed SVG or ≤20KB 2× PNG from LOGO/ (current PNGs are oversized exports)</td><td>design-system/shell.css + all pages</td></tr>
+    <tr><td>3</td><td>Introduce the one accent moment per page (index hero CTA; solutions "Explore CIOS →"; etc.)</td><td>index/solutions/general/dlc/imm/cios .html</td></tr>
+    <tr><td>4</td><td>Replace emoji card icons with stroke glyphs (next solutions.html edit)</td><td>solutions.html</td></tr>
+  </tbody>
+</table>
+<h3>CIOS portals</h3>
+<table class="spec">
+  <thead><tr><th>#</th><th>Change</th><th>Files</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Status tokens (§3.3 values), <code>--accent/--ring</code> → X Blue, <code>--radius: 0.375rem</code>, Inter</td><td>packages/ui globals.css + tailwind.preset.cjs</td></tr>
+    <tr><td>2</td><td>Run CIOS UI Guideline v1.0 §10 migration checklist unchanged (its component rules are absorbed here as §6)</td><td>admin.*.tsx ×6 + packages/ui</td></tr>
+    <tr><td>3</td><td>Portal headers adopt wordmark: "MDCX · CIOS Ops"</td><td>OpsShell / customer shell</td></tr>
+  </tbody>
+</table>
+<p><b>Governance:</b> this document is the design authority for both repos. The CIOS UI Guideline v1.0 remains the ops-portal implementation manual, subordinate to this language. Conflicts → this doc wins → escalate to Yuri. External-facing copy remains subject to FOG workspace veto.</p>
+
+<p style="margin-top:56px;font-size:12px;color:var(--x-ink-3);border-top:1px solid var(--x-line);padding-top:14px">
+MDCX Design Language v1.0 · 2026-07-17 · Sources: <span class="mono">MDC/LOGO</span> (MDCX wordmark) · <span class="mono">design-system/tokens.css</span> · CIOS UI/UX Guideline v1.0 (2026-07-16) · General_Solution_Design v0.2 guardrails. Markdown twin: <span class="mono">MDCX-DESIGN-LANGUAGE.md</span>.
+</p>
+</main>
+</div>
+</body>
+</html>

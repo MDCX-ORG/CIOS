@@ -1,0 +1,11 @@
+kind: PointMap
+metadata:
+  name: v6-dup-point
+  driver: modbus-sim
+  appliesTo: cdu
+spec:
+  points:
+    - point: fws.supply.flow
+      register: 30021
+    - point: fws.supply.flow
+      register: 30022

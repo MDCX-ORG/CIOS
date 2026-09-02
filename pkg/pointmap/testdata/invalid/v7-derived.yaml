@@ -1,0 +1,9 @@
+kind: PointMap
+metadata:
+  name: v7-derived
+  driver: modbus-sim
+  appliesTo: cdu
+spec:
+  points:
+    - point: deltat
+      register: 30030

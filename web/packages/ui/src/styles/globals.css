@@ -1,0 +1,126 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * MDCX Design Language v2.0 → CIOS console bindings (PRMT-239).
+ * Canonical color values: ../MDC/design-system/tokens.css (sole source);
+ * roles/rationale: ../MDC/docs/MDCX-DESIGN-LANGUAGE.md §3 + docs/design/MDCX-DESIGN-LANGUAGE.md.
+ * HSL channel triplets only (no hsl() wrapper — Tailwind wraps); each line carries its canonical hex.
+ */
+
+@layer base {
+  :root {
+    /* §3.1 surfaces (Day — light console default) */
+    --background: 210 20% 97%; /* surface-1 canvas #F5F7F9 */
+    --foreground: 218 18% 9%; /* ink-primary #12151A */
+
+    --card: 0 0% 100%; /* surface-3 #FFFFFF */
+    --card-foreground: 218 18% 9%; /* #12151A */
+
+    --popover: 0 0% 100%; /* surface-4 #FFFFFF */
+    --popover-foreground: 218 18% 9%; /* #12151A */
+
+    /* mono brand invert (primary buttons stay mono — not X Blue) */
+    --primary: 218 18% 9%; /* brand #12151A */
+    --primary-foreground: 210 25% 98%; /* brand-ink #FAFBFC */
+
+    --secondary: 210 20% 98%; /* surface-2 #FAFBFC */
+    --secondary-foreground: 218 18% 9%; /* #12151A */
+
+    --muted: 210 20% 98%; /* surface-2 #FAFBFC */
+    --muted-foreground: 218 11% 38%; /* ink-tertiary #565E6C */
+
+    /* §3.3 X Blue (Day) — fill and text are separate roles */
+    --accent: 215 81% 44%; /* accent fill #1560CC */
+    --accent-foreground: 0 0% 100%; /* accent-ink #FFFFFF */
+    --accent-text: 215 81% 44%; /* accent text (links, active nav) #1560CC */
+
+    /* §3.4 status quartet (Day) */
+    --destructive: 3 72% 44%; /* critical #C0261F */
+    --destructive-foreground: 0 0% 100%; /* #FFFFFF */
+
+    --success: 153 91% 25%; /* ok #067A46 */
+    --success-foreground: 0 0% 100%; /* #FFFFFF */
+
+    --warning: 39 100% 27%; /* warn #8A5A00 */
+    --warning-foreground: 0 0% 100%; /* #FFFFFF */
+
+    --info: 203 88% 35%; /* info #0B6BA8 */
+    --info-foreground: 0 0% 100%; /* #FFFFFF */
+
+    --border: 216 17% 88%; /* line #DCE0E6 */
+    --input: 218 12% 55%; /* line-input #7E8899 (WCAG 1.4.11 ≥3:1) */
+    --ring: 215 81% 44%; /* accent-ring #1560CC */
+
+    /* Console radius 6px (D2); button md = calc(radius − 2px) = 4px */
+    --radius: 0.375rem;
+
+    --font-sans: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+      Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono",
+      monospace;
+  }
+
+  .dark {
+    /* §3.1 surfaces (Night — dark console) */
+    --background: 220 20% 6%; /* surface-1 canvas #0C0E12 */
+    --foreground: 210 25% 98%; /* ink-primary #FAFBFC */
+
+    --card: 219 15% 11%; /* surface-3 #171A20 */
+    --card-foreground: 210 25% 98%; /* #FAFBFC */
+
+    --popover: 218 16% 14%; /* surface-4 #1E222A */
+    --popover-foreground: 210 25% 98%; /* #FAFBFC */
+
+    --primary: 210 25% 98%; /* brand #FAFBFC */
+    --primary-foreground: 220 20% 6%; /* brand-ink #0C0E12 */
+
+    --secondary: 218 19% 8%; /* surface-2 #111419 */
+    --secondary-foreground: 210 25% 98%; /* #FAFBFC */
+
+    --muted: 218 19% 8%; /* surface-2 #111419 */
+    --muted-foreground: 219 11% 64%; /* ink-tertiary #9AA1AE */
+
+    /* §3.3 X Blue (Night) — fill and text are separate roles */
+    --accent: 218 74% 53%; /* accent fill #2F6FE0 */
+    --accent-foreground: 0 0% 100%; /* accent-ink #FFFFFF */
+    --accent-text: 217 91% 70%; /* accent text (links, active nav) #6BA1F8 */
+
+    /* §3.4 status quartet (Night) */
+    --destructive: 0 91% 71%; /* critical #F87171 */
+    --destructive-foreground: 220 20% 6%; /* #0C0E12 */
+
+    --success: 158 64% 52%; /* ok #34D399 */
+    --success-foreground: 220 20% 6%; /* #0C0E12 */
+
+    --warning: 43 96% 56%; /* warn #FBBF24 */
+    --warning-foreground: 220 20% 6%; /* #0C0E12 */
+
+    --info: 198 93% 60%; /* info #38BDF8 */
+    --info-foreground: 220 20% 6%; /* #0C0E12 */
+
+    --border: 217 16% 16%; /* line #232830 */
+    --input: 218 11% 40%; /* line-input #5C6472 (WCAG 1.4.11 ≥3:1) */
+    --ring: 217 90% 63%; /* accent-ring #4C8DF6 */
+
+    --radius: 0.375rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  code,
+  kbd,
+  pre,
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+}

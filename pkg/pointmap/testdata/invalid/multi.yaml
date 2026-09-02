@@ -1,0 +1,15 @@
+kind: PointMap
+metadata:
+  name: multi-error
+  driver: modbus-sim
+  appliesTo: cdu
+spec:
+  points:
+    - point: fws.temp
+      register: 30023
+      unit_in: decicelsius
+    - point: tcs.opening
+      access: rw
+      risk_class: b
+    - point: deltat
+      register: 30030

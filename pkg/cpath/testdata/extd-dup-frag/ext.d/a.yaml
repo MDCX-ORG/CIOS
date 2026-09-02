@@ -1,0 +1,3 @@
+version: "0.1"
+types:
+  fragsame: { parents: [rack], level: device, desc: "first fragment" }

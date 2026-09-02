@@ -1,0 +1,17 @@
+# Grafana datasource provisioning for the M0 demo (PRMT-013 §4.2).
+#
+# Provisioned at container start by Grafana itself (the provisioning
+# directory is bind-mounted into /etc/grafana/provisioning in the
+# docker-compose service). Name + uid are referenced by the CIOS Edge
+# dashboard JSON and by scripts/m0-smoke.sh assertions; changing them
+# requires updating both.
+apiVersion: 1
+
+datasources:
+  - name: CIOS-Edge-VM
+    uid: cios-edge-vm
+    type: prometheus
+    access: proxy
+    url: http://victoriametrics:8428
+    isDefault: true
+    editable: false

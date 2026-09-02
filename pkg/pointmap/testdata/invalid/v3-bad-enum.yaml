@@ -1,0 +1,10 @@
+kind: PointMap
+metadata:
+  name: v3-bad-enum
+  driver: modbus-sim
+  appliesTo: cdu
+spec:
+  points:
+    - point: status
+      register: 30001
+      enum_map: { 1: 9 }

@@ -1,0 +1,5 @@
+version: "0.1"
+types:
+  newtype: { parents: [pod], level: device, desc: "fixture ext type" }
+quantities:
+  extq: { unit: celsius, kind: gauge, desc: "fixture ext quantity" }

@@ -1,0 +1,35 @@
+kind: PointMap
+metadata:
+  name: cdu-sim
+  driver: modbus
+  appliesTo: cdu
+spec:
+  points:
+    - point: fws.supply.temp
+      register: 0x0010
+      table: input
+      unit_in: decicelsius
+    - point: fws.return.temp
+      register: 0x0011
+      table: input
+      unit_in: decicelsius
+    - point: fws.supply.flow
+      register: 0x0012
+      table: input
+      unit_in: m3ph
+      scale: 0.1
+    - point: tcs.opening
+      register: 0x0020
+      table: holding
+      # P722 / L108: secondary valve-class control (B). Was a; aligned to §8bis B.
+      access: rw
+      risk_class: b
+      limits: { min: 0, max: 100 }
+    - point: status
+      register: 0x0030
+      table: input
+      enum_map: { 0: 0, 1: 1, 2: 2, 3: 3, 4: 4, 5: 5 }
+    - point: leak
+      register: 0x0031
+      table: input
+      enum_map: { 0: 0, 1: 1 }

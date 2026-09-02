@@ -1,0 +1,303 @@
+# CIOS edge base stack: three storage/bus foundations only.
+# No cios-* business containers in this prompt; those land in M1.
+# All ports bound to 127.0.0.1 (spec-006 §5.2 zero-inbound principle).
+name: cios-edge
+
+services:
+  victoriametrics:
+    image: victoriametrics/victoria-metrics:v1.145.0
+    container_name: cios-victoriametrics
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8428:8428"
+    volumes:
+      - vm-data:/storage
+      # PRMT-095: scrape cios-core /v1/capacity/metrics into VM so the
+      # capacity dashboard (grafana/dashboards/capacity.json) has data.
+      # Demo: cios-core runs with -allow-no-auth, so no token is sent.
+      - ./vm-scrape.yaml:/etc/cios/vm-scrape.yaml:ro
+    command:
+      - -retentionPeriod=90d
+      - -storageDataPath=/storage
+      - -promscrape.config=/etc/cios/vm-scrape.yaml
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8428/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cios-edge
+
+  postgres:
+    image: postgres:16.14-alpine
+    container_name: cios-postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5432:5432"
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: cios
+      POSTGRES_USER: cios
+      POSTGRES_PASSWORD: ${CIOS_PG_PASSWORD}
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "cios"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cios-edge
+
+  nats:
+    image: nats:2.14.2-alpine
+    container_name: cios-nats
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:4222:4222"
+      - "127.0.0.1:8222:8222"
+    volumes:
+      - nats-data:/data
+    command:
+      - --jetstream
+      - --store_dir
+      - /data
+      - -m
+      - "8222"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8222/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cios-edge
+
+  grafana:
+    image: grafana/grafana-oss:12.4.3
+    container_name: cios-grafana
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${CIOS_GRAFANA_PASSWORD}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+    depends_on:
+      victoriametrics:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/api/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cios-edge
+
+  # ── M1 business services (PRMT-026 §4.2) ────────────────────────────
+  # All business services share the cios-edge:local image built from
+  # deploy/edge/Dockerfile; `command:` selects which binary runs.
+  # Business-to-business traffic stays on the cios-edge bridge; only
+  # cios-core's HTTP API is published to 127.0.0.1 on the host
+  # (spec-006 §5.2 zero-inbound). cios-modbussim needs
+  # -allow-public-bind so a co-resident cios-gateway can reach it
+  # across the bridge (cmd/cios-modbussim/main.go §4.8).
+  cios-modbussim:
+    image: cios-edge:local
+    build:
+      context: ../..
+      dockerfile: deploy/edge/Dockerfile
+    container_name: cios-modbussim
+    restart: unless-stopped
+    command: ["cios-modbussim", "-listen", "0.0.0.0:15020", "-seed", "1", "-allow-public-bind"]
+    # PRMT-121: soak-mode env (default OFF). scripts/m2-soak.sh exports
+    # these before compose up; non-soak runs leave them at the defaults.
+    environment:
+      CIOS_SOAK_MODE: ${CIOS_SOAK_MODE:-0}
+      CIOS_SOAK_PERIOD_MIN_S: ${CIOS_SOAK_PERIOD_MIN_S:-60}
+      CIOS_SOAK_PERIOD_MAX_S: ${CIOS_SOAK_PERIOD_MAX_S:-180}
+      CIOS_SOAK_DWELL_S: ${CIOS_SOAK_DWELL_S:-15}
+    networks:
+      - cios-edge
+
+  cios-gateway:
+    image: cios-edge:local
+    build:
+      context: ../..
+      dockerfile: deploy/edge/Dockerfile
+    container_name: cios-gateway
+    restart: unless-stopped
+    command: ["cios-gateway", "-config", "/etc/cios/gateway.compose.yaml"]
+    volumes:
+      - ./gateway.compose.yaml:/etc/cios/gateway.compose.yaml:ro
+      - ../../protocol:/protocol:ro
+      - ./pointmaps:/etc/cios/pointmaps:ro
+    depends_on:
+      victoriametrics:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+      cios-modbussim:
+        condition: service_started
+    networks:
+      - cios-edge
+
+  cios-edge-writer:
+    image: cios-edge:local
+    build:
+      context: ../..
+      dockerfile: deploy/edge/Dockerfile
+    container_name: cios-edge-writer
+    restart: unless-stopped
+    command:
+      - cios-edge-writer
+      - -nats-url=nats://nats:4222
+      - -vm-url=http://victoriametrics:8428/api/v1/import/prometheus
+      - -site=site01
+    depends_on:
+      victoriametrics:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - cios-edge
+
+  cios-core:
+    image: cios-edge:local
+    build:
+      context: ../..
+      dockerfile: deploy/edge/Dockerfile
+    container_name: cios-core
+    restart: unless-stopped
+    # -listen 0.0.0.0 inside the container; published to 127.0.0.1 only.
+    # No -rbac (M0 loopback single-site per PRMT-026 §1.2).
+    # No -seed-alarms (omitted per §8-bis 选项 B: M1 demo doesn't
+    # exercise the M0 alarm seed; PRMT-026's bootstrap rule is
+    # produced organically by cios-alarm observing telemetry).
+    command:
+      - cios-core
+      - -listen=0.0.0.0:8080
+      - -protocol=/protocol
+      - -vm=http://victoriametrics:8428
+      - -pg-dsn=${CIOS_PG_DSN}
+      - -allow-no-auth          # loopback demo: no inbound auth (PRMT-026 §1.2 / spec-006 §5.2)
+      - -allow-public-bind      # PRMT-216: intentional in-container 0.0.0.0; ports: only 127.0.0.1
+      - -migrations=/migrations
+      # PRMT-198 / L102: Usage production wiring (scan + NATS sink).
+      - -usage-scan-interval=1h
+      - -nats-url=nats://nats:4222
+    volumes:
+      - ../../protocol:/protocol:ro
+      - ../../migrations:/migrations:ro
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      victoriametrics:
+        condition: service_healthy
+      nats:
+        condition: service_healthy
+    networks:
+      - cios-edge
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8080/v1/assets"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cios-rules:
+    image: cios-edge:local
+    build:
+      context: ../..
+      dockerfile: deploy/edge/Dockerfile
+    container_name: cios-rules
+    restart: unless-stopped
+    command:
+      - cios-rules
+      - -vm-url=http://victoriametrics:8428
+      - -protocol-dir=/protocol
+      - -site=site01
+      - -interval=30s
+    volumes:
+      - ../../protocol:/protocol:ro
+    depends_on:
+      victoriametrics:
+        condition: service_healthy
+    networks:
+      - cios-edge
+
+  cios-alarm:
+    image: cios-edge:local
+    build:
+      context: ../..
+      dockerfile: deploy/edge/Dockerfile
+    container_name: cios-alarm
+    restart: unless-stopped
+    command:
+      - cios-alarm
+      - -nats-url=nats://nats:4222
+      - -site=site01
+      - -rules-dir=/etc/cios/rules
+      - -protocol-dir=/protocol
+      - -pg-dsn=${CIOS_PG_DSN}
+      - -auto-ticket
+    volumes:
+      - ./rules:/etc/cios/rules:ro
+      - ../../protocol:/protocol:ro
+    depends_on:
+      nats:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+      cios-modbussim:
+        condition: service_started
+      cios-gateway:
+        condition: service_started
+    networks:
+      - cios-edge
+
+# ── PRMT-028: site-level derived quantities (vmalert) ───────────────
+  # Loads deploy/edge/vmalert/site-derived.yaml (4 recording rules:
+  # itload / facilityload / PUE / WUE). Evaluates every 30s and
+  # remoteWrite's back to victoriametrics with producer=vmalert
+  # (stamped via group-level `labels:` in the rules file — vmalert
+  # has no `-remoteWrite.label` CLI flag; R2-M5). spec-006 §5.3
+  # wire-audit obligation satisfied at M1 minimal. Ports default
+  # un-published; uncomment the `ports:` block for local debugging
+  # (127.0.0.1 only — spec-006 §5.2 zero-inbound).
+  vmalert:
+    image: victoriametrics/vmalert:v1.145.0
+    container_name: cios-vmalert
+    restart: unless-stopped
+    command:
+      - -rule=/etc/vmalert/site-derived.yaml
+      - -datasource.url=http://victoriametrics:8428
+      - -remoteWrite.url=http://victoriametrics:8428
+      - -evaluationInterval=30s
+    volumes:
+      - ./vmalert:/etc/vmalert:ro
+    depends_on:
+      victoriametrics:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8880/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    # ports:
+    #   - "127.0.0.1:8880:8880"
+    networks:
+      - cios-edge
+
+networks:
+  cios-edge:
+    driver: bridge
+
+volumes:
+  vm-data:
+  pg-data:
+  nats-data:
+  grafana-data:

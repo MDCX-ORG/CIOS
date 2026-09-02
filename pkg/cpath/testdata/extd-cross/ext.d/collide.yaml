@@ -1,0 +1,6 @@
+version: "0.1"
+# Cross-section conflict: "temp" is a quantity, fragment defines it as a type.
+# cpath.LoadDict does not enforce disjointness (speccheck does), so this
+# fixture should LOAD successfully but FAIL under speccheck.
+types:
+  temp: { parents: [pod], level: device, desc: "cross-section collision" }

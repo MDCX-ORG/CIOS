@@ -1,0 +1,16 @@
+# PRMT-027 §4 — Pod 火警（fire enum 0/1）。
+# fire 0=normal / 1=alarm（quantities.yaml）。本规则只编码
+# 单点 fire==1 的瞬时触发；不与 smoke fire1 做跨规则联动
+# （联动属 NotifyRoute / 抑制逻辑，spec-003 §5 后续）。
+---
+kind: AlarmRule
+metadata:
+  name: pod-fire-alarm
+  appliesTo: pod
+spec:
+  expr: "fire == 1"
+  for: 0s
+  severity: critical
+  annotations:
+    summary: "Pod 火警触发（fire=1 瞬时）"
+    runbook: "rb/pod-fire"

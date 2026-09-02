@@ -1,0 +1,65 @@
+# Optional app-layer profile for the edge stack (PRMT-212 / P796).
+# Base foundations remain in docker-compose.yml (VM/PG/NATS/Grafana).
+# Usage:
+#   docker compose -f docker-compose.yml -f docker-compose.apps.yml --profile apps up -d
+#
+# Lab/dev only: core -allow-no-auth + apigw DEV_NO_AUTH. Not a production posture.
+# PRMT-216: -allow-public-bind / CIOS_APIGW_ALLOW_PUBLIC_BIND=1 deliberately
+# declare in-container 0.0.0.0 / ":port" binds; host ports publish only to 127.0.0.1.
+name: cios-edge
+
+services:
+  cios-core:
+    profiles: ["apps"]
+    image: golang:1.24-bookworm
+    container_name: cios-core
+    working_dir: /src
+    volumes:
+      - ../..:/src:ro
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        CGO_ENABLED=0 go run -tags lab ./cmd/cios-core \
+          -protocol /src/protocol \
+          -store /tmp/cios-apps.json \
+          -allow-no-auth \
+          -allow-public-bind \
+          -listen 0.0.0.0:8090
+    ports:
+      - "127.0.0.1:8090:8090"
+    environment:
+      CIOS_PG_DSN: postgres://cios:${CIOS_PG_PASSWORD:-cios}@postgres:5432/cios?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - cios-edge
+    restart: unless-stopped
+
+  cios-apigw:
+    profiles: ["apps"]
+    image: golang:1.24-bookworm
+    container_name: cios-apigw
+    working_dir: /src
+    volumes:
+      - ../..:/src:ro
+    command:
+      - bash
+      - -c
+      - |
+        set -e
+        CGO_ENABLED=0 go run -tags lab ./cmd/cios-apigw
+    ports:
+      - "127.0.0.1:8089:8089"
+    environment:
+      CIOS_APIGW_LISTEN: ":8089"
+      CIOS_APIGW_UPSTREAM: "http://cios-core:8090"
+      CIOS_APIGW_DEV_NO_AUTH: "1"
+      CIOS_APIGW_ALLOW_PUBLIC_BIND: "1"
+    depends_on:
+      - cios-core
+    networks:
+      - cios-edge
+    restart: unless-stopped

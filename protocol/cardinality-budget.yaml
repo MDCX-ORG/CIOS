@@ -1,0 +1,63 @@
+# CIOS — 指标/标签基数预算（T35 / PRMT-069 speccheck guardrail）
+#
+# speccheck（tools/speccheck）读取本文件后执行：
+#   Σ(每资产类型的 pointmap 点数 × per_type_count[type]) ≤ site_budget
+# 超预算 → speccheck 非零退出（CI 红）。文件缺失 → 检查跳过（no-op）。
+#
+# ⚠️ PROVISIONAL（2026-06-21，架构者）—— 本文件是**前瞻护栏**，不是权威定容。
+#   - per_type_count 为**单站（1 个 DC45 级、GPU-inclusive 包络）的临时估值**，
+#     依赖 T3 / Q-S1-S2（站点数、典型 pod 数、单站规模）—— 这些仍为 🔴 待销售口径。
+#     待 T3 回收后，由架构者据实修订（走本文件 + 提交，不改 speccheck 代码）。
+#   - 量级依据：EXT-001 单 DC45 设施侧≈560 点、含 GPU/BMC≈2.75 万点（T3）；
+#     L68 设施侧即时 ~1 万点/站，L51 GPU-inclusive 全量靶 ≥100 万点（后期/fleet）。
+#   - site_budget 取 **50000（单站）**：高于 EXT-001 的 ~2.75 万含 GPU 包络（~1.8× headroom），
+#     既能在 pointmap 逐步补齐后捕获"基数悬崖"（点表填满后估值逼近预算即告警），
+#     又不会对当前设施侧（远低于此）误报。fleet/N 站汇聚的总基数预算另案（VM 侧容量规划）。
+#   - 当前多数 pointmap（点表）随 T4 厂商资料待补，故 speccheck 实算 Σ 目前偏低；
+#     本预算的价值=立约定 + 激活检查（T35「bite 前立约定」），随点表补齐自动收紧。
+#
+# 类型键必须出自 protocol/types.yaml（protocol/types.yaml：字典外类型禁用）。
+
+version: "0.1-provisional"
+
+site_budget: 50000
+
+# 单站临时实例估值（PROVISIONAL — 待 T3/Q-S1-S2 修订）。
+# 主导基数 = node / gpu / cell（IT 带内 + 电池单体遥测）。
+per_type_count:
+  # computing
+  pod: 2
+  tank: 4          # AC 系列浸没；DC 系列用 rack（同站二选一为主，给小量）
+  rack: 20         # DC 系列
+  node: 200
+  gpu: 1600        # ≈ node × 8（DCGM device index 对齐）—— 主导项
+  cdu: 8
+  ups: 4
+  pdu: 40
+  busbar: 4
+  tou: 40
+  switch: 24
+  # cooling
+  chiller: 2
+  drycooler: 4
+  fan: 16
+  pump: 12
+  compressor: 4
+  valve: 40
+  watermeter: 4
+  # feed / power
+  switchgear: 2
+  breaker: 24
+  transformer: 2
+  meter: 24
+  bess: 2
+  battery: 16
+  cell: 800        # 电池单体（若按 BMS 编号逐 cell 采集）
+  pcs: 4
+  genset: 2
+  # network
+  fabricswitch: 16
+  coreswitch: 4
+  router: 4
+  firewall: 4
+  oobswitch: 8

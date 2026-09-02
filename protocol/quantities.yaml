@@ -1,0 +1,53 @@
+# CIOS 量纲字典 — 权威源（spec-002 §3/§9 由本文件生成）
+# 修改规则: PR 评审; CI 校验词汇互斥; 驱动上报未注册量纲 → 整点丢弃并告警
+# kind: gauge | counter; 单位为入库强制标准单位, 换算在 gateway 完成
+version: "0.3"
+
+quantities:
+  # ── 热工/水路 ──────────────────────────────────────────
+  temp:       { unit: celsius, kind: gauge, desc: "温度; 水路温度强制带 side" }
+  flow:       { unit: lpm,     kind: gauge, desc: "流速" }
+  press:      { unit: kpa,     kind: gauge, desc: "压力" }
+  level:      { unit: percent, kind: gauge, desc: "液位" }
+  humidity:   { unit: percent_rh, kind: gauge, desc: "湿度" }
+  volume:     { unit: liter,   kind: counter, desc: "累计水量 (补水计量→WUE)" }
+  # ── 电气 ───────────────────────────────────────────────
+  amp:        { unit: ampere,  kind: gauge }
+  volt:       { unit: volt,    kind: gauge }
+  power:      { unit: watt,    kind: gauge, desc: "有功功率" }
+  reactive:   { unit: var,     kind: gauge, desc: "无功功率" }
+  pf:         { unit: ratio,   kind: gauge, desc: "功率因数" }
+  freq:       { unit: hertz,   kind: gauge }
+  energy:     { unit: kwh,     kind: counter, desc: "累计电量, 计费源" }
+  # ── 电池 ───────────────────────────────────────────────
+  soc:        { unit: percent, kind: gauge, desc: "荷电状态" }
+  resistance: { unit: milliohm, kind: gauge, desc: "单体内阻, 健康度/预测核心信号" }
+  # ── 机械/设备 ──────────────────────────────────────────
+  rpm:        { unit: rpm,     kind: gauge, desc: "转速" }
+  opening:    { unit: percent, kind: gauge, desc: "阀门开度 (原 valve, 词汇互斥改名)" }
+  vibration:  { unit: mm_per_s, kind: gauge, desc: "振动速度, M4 预测信号, M2 起埋点" }
+  runhours:   { unit: hour,    kind: counter, desc: "累计运行小时, M2 按计量维护触发" }
+  status:     { unit: enum,    kind: gauge, enum: { 0: ok, 1: standby, 2: warning, 3: fault, 4: maintenance, 5: offline } }
+  # ── 算力 ───────────────────────────────────────────────
+  util:       { unit: percent, kind: gauge, desc: "利用率 (GPU/CPU/Mem)" }
+  mem:        { unit: bytes,   kind: gauge, desc: "内存/显存用量" }
+  clock:      { unit: mhz,     kind: gauge, desc: "时钟频率, 降频检测" }
+  ecc:        { unit: count,   kind: counter, desc: "ECC 错误累计" }
+  bandwidth:  { unit: bps,     kind: gauge, desc: "链路流量 (NVLink/网络端口)" }
+  # ── 安全 (B1: 测点级接入) ───────────────────────────────
+  leak:       { unit: enum,    kind: gauge, enum: { 0: dry, 1: leak }, desc: "漏液检测, 液冷关键; 定位型配 leakpos" }
+  leakpos:    { unit: meter,   kind: gauge, desc: "定位型漏液传感器报警位置" }
+  fire:       { unit: enum,    kind: gauge, enum: { 0: normal, 1: alarm } }
+  door:       { unit: enum,    kind: gauge, enum: { 0: closed, 1: open } }
+  smoke:      { unit: enum,    kind: gauge, enum: { 0: normal, 1: alert, 2: action, 3: fire1, 4: fire2 },
+                desc: "烟雾分级, 对齐 VESDA 吸气式 (EXT-002/D20); 二值探测器点表映射 1→3" }
+
+derived: # 派生量: 有地址, recording rule 统一实现, 禁止各处自算 (spec-002 §9)
+  deltat:       { unit: celsius, host: [cdu, chiller], formula: "return.temp - supply.temp" }
+  heat:         { unit: kw, host: [cdu, chiller], formula: "flow * deltat * 比热 * 密度 / 60 (介质按 loop)" }
+  cop:          { unit: ratio, host: [chiller], formula: "制冷量 / 耗电功率" }
+  itload:       { unit: watt, host: [site], formula: "sum(tou.power) 或 sum(pdu.power), 按站点计量配置" }
+  facilityload: { unit: watt, host: [site], formula: "站级 meter.power" }
+  pue:          { unit: ratio, host: [site], formula: "facilityload / itload" }
+  wue:          { unit: l_per_kwh, host: [site], formula: "volume 差分 / IT 用电量" }
+  # 待补: BESS 充放电效率

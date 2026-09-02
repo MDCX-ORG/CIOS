@@ -1,0 +1,20 @@
+# PRMT-027 §4 — CDU 一次侧 ΔT 过低。
+# 量纲 celsius（protocol/quantities.yaml 派生量 deltat）。
+# hysteresis=0.5（spec-003 §3）：告警边缘 0.5 °C 抖动抑制，
+# 防止 deltat 在 4 °C 临界来回跨变。
+# 注：原 §4 设想 cooling.yaml 含 3 条，但 pkg/alarm.LoadRules 用
+# yaml.Unmarshal 只读首文档；为保每条规则独立装载，R1.1 拆为
+# 1 文件 1 规则。
+---
+kind: AlarmRule
+metadata:
+  name: cdu-fws-deltat-low
+  appliesTo: cdu
+spec:
+  expr: "fws.deltat < 4"
+  for: 5m
+  severity: minor
+  hysteresis: 0.5
+  annotations:
+    summary: "CDU 一次侧 ΔT 过低（< 4 °C 持续 5min）"
+    runbook: "rb/cdu-deltat-low"

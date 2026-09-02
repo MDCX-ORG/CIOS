@@ -1,0 +1,62 @@
+# CIOS 资产类型注册表 — 权威源（spec-001 §4 由本文件生成）
+# 修改规则: PR 评审; CI 校验: ①词汇互斥 types∩locations∩quantities=∅ ②父子合法性 ③级别合法性
+# level: device = 三位补零序号(000起) | chip = 不补零序号(0起, 对齐硬件枚举)
+# v0.7 (2026-07-10, spec-001 v1.1/L101): 新增顶层 ports 词汇表 + 类型级可选 ports 键 (§7bis);
+#   端口名入词汇互斥 (ports∩types∩locations∩quantities=∅); speccheck 端口互斥检查待扩(基座 PRMT),
+#   本版人工核验无冲突
+version: "0.7"
+
+domains: # 域由顶层类型派生, 不进路径 (spec-001 §3)
+  computing: [pod]
+  cooling: [chiller, watermeter]
+  feed: [switchgear, bess, transformer, meter, genset]
+  network: [fabricswitch, coreswitch, router, firewall, oobswitch]
+
+types:
+  # ── computing ──────────────────────────────────────────
+  pod:         { parents: [site],           level: device, desc: "算力集装箱", attrs_required: [model, serial, template, rated_power_kw], ports: [liquid_in, liquid_out] }
+  tank:        { parents: [pod],            level: device, desc: "浸没液槽 (AC 系列)" }
+  rack:        { parents: [pod],            level: device, desc: "机柜 (DC 系列)" }
+  node:        { parents: [tank, rack],     level: device, desc: "服务器节点", attrs_required: [serial] }
+  gpu:         { parents: [node],           level: chip,   desc: "GPU, 序号对齐 DCGM device index", attrs_required: [serial] }
+  cdu:         { parents: [pod, tank],      level: device, desc: "冷却液分配单元; A32 每槽内置 2×CDU (L54/EXT-001)", ports: [liquid_in, liquid_out] }
+  ups:         { parents: [pod],            level: device, desc: "pod 内置 UPS" }
+  pdu:         { parents: [rack, pod],      level: device, desc: "配电单元" }
+  busbar:      { parents: [pod],            level: device, desc: "母线" }
+  tou:         { parents: [busbar],         level: device, desc: "Tap-Off Unit; 供 rack/CDU/空调等负载 (L54), feeds 边自动生成" }
+  switch:      { parents: [pod, rack],      level: device, desc: "TOR/管理交换机" }
+  # ── cooling ────────────────────────────────────────────
+  chiller:     { parents: [site, pod],      level: device, desc: "HybridChiller 整机; 1:1 配套挂 pod, 多 pod 共享挂 site (L46)", attrs_required: [model, serial, template], ports: [liquid_in, liquid_out] }
+  drycooler:   { parents: [chiller],        level: device, desc: "干冷段" }
+  fan:         { parents: [drycooler, ceilair], level: device, desc: "风扇 (干冷器 / 顶置空调内置, EXT-002)" }
+  pump:        { parents: [chiller, cdu],   level: device, desc: "水泵 (含 CDU 内置二次泵 2N/N+1, EXT-002)" }
+  compressor:  { parents: [chiller],        level: device, desc: "压缩机段" }
+  valve:       { parents: [chiller, cdu, pod], level: device, desc: "带控制/反馈的阀组 (含环管 PICV/DPBV, EXT-002); 简单阀门用测点 opening" }
+  watermeter:  { parents: [chiller, site],  level: device, desc: "补水计量水表 → WUE (D4)" }
+  # ── feed ───────────────────────────────────────────────
+  switchgear:  { parents: [site],           level: device, desc: "开关柜" }
+  breaker:     { parents: [switchgear],     level: device, desc: "断路器" }
+  transformer: { parents: [site],           level: device, desc: "变压器" }
+  meter:       { parents: [switchgear, tou, transformer, site], level: device, desc: "计量电表, 位置决定计量边界" }
+  bess:        { parents: [site, ups, pod], level: device, desc: "电池系统 (场地级 / UPS 模块级 / pod BESS 舱, EXT-002)" }
+  battery:     { parents: [bess, ups],      level: device, desc: "电池簇/电池组" }
+  cell:        { parents: [battery],        level: chip,   desc: "单体电池, 序号对齐 BMS 编号" }
+  pcs:         { parents: [bess],           level: device, desc: "功率变换系统" }
+  genset:      { parents: [site],           level: device, desc: "发电机组" }
+  # ── network (D2: plane 属性 fabric|inband|oob 三平面) ──
+  fabricswitch: { parents: [site, pod],     level: device, desc: "业务算力网交换机", attrs_required: [fabric] } # fabric: roce|infiniband
+  coreswitch:  { parents: [site],           level: device, desc: "核心/汇聚交换机 (带内)" }
+  router:      { parents: [site],           level: device, desc: "路由器" }
+  firewall:    { parents: [site, pod],      level: device, desc: "防火墙 (site 级 + pod 级, 多级 gateway 放行)" }
+  oobswitch:   { parents: [site, pod],      level: device, desc: "带外管理网交换机 (BMC/IPMI)" }
+
+lifecycle: [planned, installed, active, maintenance, retired]
+
+ports: # 端口词汇表 (spec-001 §7bis, v1.1/L101; add-only, 入词汇互斥; 实例数量由型号模板给出)
+  liquid_in:  { desc: "液路入口端点 (E3.6a Domain-C; USD 承载 = typed relationship, BP-10/spec-007)" }
+  liquid_out: { desc: "液路出口端点 (同上); 不铸 power 端口 — 电力拓扑走 feeds 边 (L101 评审 2/9)" }
+
+relations: # 关系边 (spec-001 §7)
+  feeds:    { attrs: [rated_kw, redundancy_group] }
+  cools:    { attrs: [rated_cooling_kw, redundancy_group], port_attrs: [from_port, to_port] } # v1.1 §7bis: 可选钉到端口
+  connects: { attrs: [bandwidth_gbps], port_attrs: [from_port, to_port] }                     # v1.1 §7bis: 可选钉到端口

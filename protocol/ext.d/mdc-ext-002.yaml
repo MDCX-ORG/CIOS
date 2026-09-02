@@ -1,0 +1,15 @@
+# 字典扩展片段 — EXT-002 DC45 检测点位回收 (docs/reference/ext-002/, 2026-06-12)
+# 规则 (L54): 片段只增不改; CI 互斥校验是唯一闸门。
+# 同批核心表变更 (走核心表修订, 见 D19-D21): smoke 枚举 5 级、side +input/output、
+# bess/pump/valve/fan 父级扩充。
+version: "0.1"
+
+types:
+  sensor: { parents: [pod, bess, busbar], level: device,
+            desc: "监测型传感器宿主: 环境温湿度/VESDA 采样区/漏液绳分区/门磁/H2/母线测温点; 布点写 desc" }
+
+quantities:
+  thd:     { unit: percent, kind: gauge, desc: "电压总谐波失真; UPS+VFD 负载场景 (DC45 P1 电表)" }
+  deltap:  { unit: kpa,     kind: gauge, desc: "压差: 板换/滤网/支路/跨阀/机柜进出口; 命名对齐 deltat" }
+  closure: { unit: enum,    kind: gauge, enum: { 0: open, 1: closed },
+             desc: "分合闸/通断位置 (ACB/MCCB/TOU); 非计划分闸告警在规则层判定" }
