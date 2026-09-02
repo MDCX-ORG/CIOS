@@ -15,8 +15,17 @@ import (
 )
 
 func TestModelPackExport_RoundTripBytes(t *testing.T) {
-	// Use in-repo fixture under assets/usd.
-	root := filepath.Join(moduleRoot(t), "assets", "usd")
+	// Commercial USD packs (assets/usd/**) are not published in the open-core
+	// tree. Exercise export against a temp fixture so the gate still covers
+	// the round-trip without depending on proprietary binaries.
+	root := filepath.Join(t.TempDir(), "usd")
+	if err := os.MkdirAll(filepath.Join(root, "pod"), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	want := []byte("cios-oss-modelpack-export-fixture")
+	if err := os.WriteFile(filepath.Join(root, "pod", "AC45.usdc"), want, 0o644); err != nil {
+		t.Fatal(err)
+	}
 	prev := ModelPackRoot
 	ModelPackRoot = root
 	t.Cleanup(func() { ModelPackRoot = prev })
@@ -30,19 +39,11 @@ func TestModelPackExport_RoundTripBytes(t *testing.T) {
 	if r.code != http.StatusOK {
 		t.Fatalf("export: %d %s", r.code, r.body)
 	}
-	if len(r.body) < 16 {
-		t.Fatalf("export body too small: %d", len(r.body))
-	}
-	// Compare to on-disk file
-	want, err := os.ReadFile(filepath.Join(root, "pod", "AC45.usdc"))
-	if err != nil {
-		t.Fatal(err)
-	}
 	if r.body != string(want) {
-		// body may be binary; compare lengths + prefix
 		if len(r.body) != len(want) {
 			t.Fatalf("export len=%d want %d", len(r.body), len(want))
 		}
+		t.Fatalf("export body mismatch")
 	}
 }
 
