@@ -70,7 +70,7 @@ files are intentional, not an oversight.
 
 | Layer | Module | What it covers |
 |---|---|---|
-| L3 | **Digital Twin Renderer** | USD/WebGL chain: scene engine, `usdlint`, `usdmap`, Omniverse extension tooling, `pkg/sceneprune`, apigw `/api/twins`, ops-portal NOC 3D, `assets/usd/**` |
+| L3 | **Digital Twin Renderer** | USD/WebGL chain: scene engine, `usdlint`, `usdmap`, Omniverse extension tooling, `pkg/sceneprune`, apigw `/api/twins`, ops-portal NOC 3D, `assets/usd/**`. Model Studio orchestration (`core/modelpacks*.go`, `core/scene_rebuild.go`, `core/sitelayout.go`, `/v1/site-layouts`, ops-portal `/admin/models*` and `/admin/draw`) is Apache-2.0 and stays in this repository; the USD toolchain and model packs it drives are commercial and unpublished. |
 | L3 | **Capacity Engine** | `core/capacity*`, forecast, capacity CLI, `/v1/capacity*`, capacity portal + dashboards |
 | L3 | **Alarm Intelligence** | product placeholder — no code |
 | L5 | **Pricing / Cost / Statement / ERP Connector** | commercial platform B — no code |

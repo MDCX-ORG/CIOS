@@ -119,6 +119,29 @@ CIOS/
 
 ---
 
+## Model Studio (bring your own USD toolchain)
+
+The model-pack, site-layout and scene-rebuild endpoints (`/v1/site-layouts`,
+model-pack import/export, and the `/admin/models` + `/admin/draw` portal pages)
+ship here, but the USD tooling they drive — `usdlint`, the scene engine, and the
+`assets/usd/**` model packs — is part of the commercial Digital Twin module and is
+not published. These endpoints fail soft when the tooling is absent: imports are
+rejected with a lint error and scene rebuilds report a missing-script status.
+
+Point them at your own implementation with:
+
+| Env var | Default | Purpose |
+|---|---|---|
+| `CIOS_MODEL_PACK_ROOT` | `assets/usd` | Where `<type>/<MODEL>.usdc` geometry lives |
+| `CIOS_MODEL_STUDIO_DIR` | `artifacts/model-studio` | Staging, lint reports, bindings, scene jobs |
+| `CIOS_USDLINT_SCRIPT` | `tools/usdlint/usdlint.py` | USD validator entrypoint |
+| `CIOS_USDLINT_PYTHON` | `python3` | Interpreter for the validator |
+| `CIOS_SCENE_SCRIPT` | `tools/scene-engine/build.py` | Scene transcode entrypoint |
+| `CIOS_SCENE_PYTHON` | falls back to `CIOS_USDLINT_PYTHON`, else `/tmp/usdlint-venv/bin/python3` | Interpreter for the scene engine |
+| `CIOS_SCENE_OUT` | `artifacts/scene` | Scene build output dir |
+
+---
+
 ## License
 
 Default license: **Apache-2.0** — see [`LICENSE`](LICENSE) (Copyright 2026 YURI MENG).
