@@ -12,14 +12,9 @@ services:
       - "127.0.0.1:8428:8428"
     volumes:
       - vm-data:/storage
-      # PRMT-095: scrape cios-core /v1/capacity/metrics into VM so the
-      # capacity dashboard (grafana/dashboards/capacity.json) has data.
-      # Demo: cios-core runs with -allow-no-auth, so no token is sent.
-      - ./vm-scrape.yaml:/etc/cios/vm-scrape.yaml:ro
     command:
       - -retentionPeriod=90d
       - -storageDataPath=/storage
-      - -promscrape.config=/etc/cios/vm-scrape.yaml
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8428/health"]
       interval: 10s

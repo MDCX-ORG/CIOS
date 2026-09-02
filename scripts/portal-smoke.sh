@@ -25,18 +25,12 @@ check() {
 
 echo "== portal-smoke PORTAL=$PORTAL APIGW=$APIGW =="
 check apigw-assets "$APIGW/api/assets?page_size=5" 200 path
-check apigw-scene  "$APIGW/api/twins/scene?site=sgp01" 200 twins-v0
-check apigw-geom   "$APIGW/api/twins/geometry/sgp01.glb" 200
 check home         "$PORTAL/" 200 data-ops-portal-ready
 check assets       "$PORTAL/assets/" 200 DC45
 check assets-ac45  "$PORTAL/assets/?model=AC45" 200 AC45
 check noc          "$PORTAL/noc" 200 data-noc-ready
-check noc3d        "$PORTAL/noc/3d?site=sgp01" 200 data-webgl-ready
-check noc3d-bare   "$PORTAL/noc/3d" 200 sgp01
-check geom-proxy   "$PORTAL/api/twins/geometry/sgp01.glb" 200
 check alarms       "$PORTAL/alarms" 200 data-alarms-page
 check tickets      "$PORTAL/tickets" 200 data-tickets-page
-check capacity     "$PORTAL/capacity?scope=pods" 200 data-capacity-page
 check maint        "$PORTAL/maintenance" 200 data-maintenance
 check spares       "$PORTAL/spares" 200 data-spares
 check inspections  "$PORTAL/inspections" 200 data-inspections

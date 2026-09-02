@@ -203,8 +203,8 @@ operations-loop properties for `site01.pod000.cdu000`:
    `state != "closed"` (spec-008 §4 / Q2 → L69).
 5. **Ops report** — `GET /v1/reports/ops` returns `mttr_seconds`
    plus `ticket_counts.{by_state,by_severity}` populated.
-6. **Wiring probes** — `/v1/capacity`, `/v1/pm/schedules`, and
-   `/v1/assets/{path}:history` each return 2xx (PRMT-040 / 043 /
+6. **Wiring probes** — `/v1/pm/schedules` and
+   `/v1/assets/{path}:history` each return 2xx (PRMT-043 /
    045 wiring health, no deep numerical check).
 7. **PASS/FAIL** — all six properties above → `M2 SMOKE PASS`,
    exit 0; any failure prints context and exits 1.
@@ -218,7 +218,7 @@ make demo-m2-clean     # docker compose down -v
 **`make demo-m2` is local-only** — it never enters `make ci`. It
 needs the same docker compose / ports / build state as `demo-m1`
 (the M1 stack is a strict subset; M2 adds no new containers). All
-M2 surfaces (tickets, ops report, capacity, PM schedules, audit
+M2 surfaces (tickets, ops report, PM schedules, audit
 history) ride on the existing `cios-core` service.
 
 ### M2 ops-loop soak (PRMT-098 / §M2-1)
@@ -344,49 +344,3 @@ docker-compose.yml for local debugging.
 - site-overview (uid=cios-site-overview): site-level PUE/WUE/itload/facilityload
 - ac40-overview (uid=cios-ac40): CDU / cooling loop (fws)
 - dc40-overview (uid=cios-dc40): rack / DLC loop
-
-### Capacity dashboard (PRMT-095 / E2.2 P522)
-
-`deploy/edge/grafana/dashboards/capacity.json` (uid
-`cios-capacity-overview`) consumes the Prometheus text endpoint
-`GET /v1/capacity/metrics` on cios-core (PRMT-056), which exposes
-power headroom (`cios_capacity_remaining_watt`), cooling headroom
-(`cios_capacity_remaining_cooling_kw`), rated values, and the
-`cios_capacity_degraded{asset_path="…"}` flag. Panels include
-per-asset stat tiles (power / cooling / rated / degraded), two
-per-asset timeseries (power headroom and cooling headroom), and
-a per-asset snapshot table. The `asset_path` templating variable
-is a multi-select, defaulting to **All**, and pulls values from
-the union of remaining-watt / remaining-cooling-kW / degraded
-metric labels so degraded assets stay selectable.
-
-#### Scrape wiring (wired by default in demo)
-
-`deploy/edge/vm-scrape.yaml` defines one job (`cios-core-capacity`)
-that scrapes `http://cios-core:8080/v1/capacity/metrics` every 30s.
-The `deploy/edge/docker-compose.yml` `victoriametrics` service mounts
-this file as `/etc/cios/vm-scrape.yaml:ro` and passes
-`-promscrape.config=/etc/cios/vm-scrape.yaml` on its command array,
-so the scrape is live as soon as `make edge-up` finishes — no extra
-operator wiring needed for the demo.
-
-The `cios-core` container runs with `-allow-no-auth` (loopback demo
-per PRMT-026 §1.2 / spec-006 §5.2), so the scrape sends no
-`Authorization` header. **No token, env var, or secrets block is
-required.** Prod viewer auth for `/v1/capacity/metrics` is a
-follow-up PRMT (spec-006 §5 viewer auth is not delivered in M2) —
-when that lands, this scrape job will gain a `bearer_token_file:`
-line in `vm-scrape.yaml` and the `docker-compose.yml` will gain a
-matching `secrets:` block; both are explicitly out of scope for
-PRMT-095.
-
-Quick check that the scrape is alive once the stack is up:
-
-```bash
-# Confirm the job reached the target at least once.
-curl -s 'http://127.0.0.1:8428/api/v1/targets' \
-  | grep -o '"job_name":"cios-core-capacity"[^}]*}'
-# Confirm the capacity metric landed in VM.
-curl -s --data-urlencode 'query=cios_capacity_remaining_watt' \
-  'http://127.0.0.1:8428/api/v1/query' | head
-```
