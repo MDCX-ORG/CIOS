@@ -1,6 +1,6 @@
 # Telemetry data resilience (gateway → NATS → edge-writer / alarm → VM/PG)
 
-> Authority: `docs/DATA-RESILIENCE-PLAN.md` (architect rulings 2026-07-16)  
+> Authority: architect rulings 2026-07-16 (this runbook)  
 > Implemented: **G1** NakWithDelay + **G2** reconnect-forever (2026-07-16)
 
 ---

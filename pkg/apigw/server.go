@@ -545,14 +545,6 @@ func (s *Server) Routes() {
 			s.handleReportOps(w, r)
 		case r.URL.Path == "/api/reports/reconcile":
 			s.handleReportReconcile(w, r)
-		// PRMT-170: /api/twins/scene and /api/twins/geometry/<name>
-		// are file-serving read-only routes for the Scene Engine
-		// v0 artefacts produced offline by PRMT-169. They live
-		// under AuthMiddleware (auth handled uniformly with the
-		// rest of /api/*); the handlers themselves do not inspect
-		// claims to filter content (L91 — visibility belongs to
-		// the upstream generator, not the gateway). See
-		// pkg/apigw/twins.go for the contract.
 		// PRMT-208: customer portal status + SLA read proxies (E3.4).
 		// Aggregate status from /v1/alarms (+ /v1/sites); SLA is Q4
 		// constants with optional forward to core /v1/sla.

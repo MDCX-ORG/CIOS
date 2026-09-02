@@ -132,7 +132,7 @@ func validateTenantIDForLabel(id string) error {
 	return nil
 }
 
-// escapeTenantIDForLabel mirrors core/capacity.go:escapeLabelValue
+// escapeTenantIDForLabel mirrors core/vmquery.go:escapeLabelValue
 // (PRMT-078). We duplicate it here so pkg/tenant does not depend
 // on pkg/core (the dependency arrow is core → tenant at most, not
 // the other way). The escape is defence-in-depth — validateTenantIDForLabel

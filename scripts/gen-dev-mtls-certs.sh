@@ -68,7 +68,7 @@ data-plane TLS (Phase 3, product-native — reuse site CA or vendor CA):
   CIOS_PG_TLS_CA=... CIOS_NATS_TLS_CA=... CIOS_VM_TLS_CA=... \\
   CIOS_VM=https://...
 
-Rotation: see docs/P793-cert-rotation-runbook.md (manual 90d; auto-issue open).
+Rotation: see docs/runbooks/P793-cert-rotation-runbook.md (manual 90d; auto-issue open).
 EOF
 
 echo "gen-dev-mtls-certs: wrote $OUT"

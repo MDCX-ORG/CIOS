@@ -163,31 +163,3 @@ export async function deleteApi(
     throw new ApiError(res.status, text || res.statusText);
   }
 }
-
-// twinsScenePath builds the live gateway scene route for a site. Pure + testable.
-// Live route = PRMT-170 GET /api/twins/scene?site=<site>. site is the caller-supplied
-// value (from noc.3d loader's existing ?site= param); encodeURIComponent guards it.
-export function twinsScenePath(site: string): string {
-  return `/api/twins/scene?site=${encodeURIComponent(site)}`;
-}
-
-/**
- * Client URL for a geometry blob.
- *
- * Prefer same-origin portal proxy (`/api/twins/geometry/<file>`) so the
- * browser is not blocked by missing CORS on apigw. Falls back to absolute
- * gateway URL only when explicitly requested (tests / direct debug).
- */
-export function twinsGeometryUrl(
-  gatewayBase: string,
-  file: string,
-  opts?: { sameOrigin?: boolean },
-): string {
-  const name = file.replace(/^.*\//, "");
-  if (opts?.sameOrigin !== false) {
-    // Default: same-origin proxy (fixes localhost:3210 → :8089 CORS).
-    return `/api/twins/geometry/${encodeURIComponent(name)}`;
-  }
-  const base = gatewayBase.replace(/\/$/, "");
-  return `${base}/api/twins/geometry/${encodeURIComponent(name)}`;
-}

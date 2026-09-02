@@ -1,6 +1,6 @@
 // Package natspub — drop.go: JetStream delivery helpers for NATS handlers.
 //
-// DATA-RESILIENCE (docs/DATA-RESILIENCE-PLAN.md G1):
+// DATA-RESILIENCE (docs/runbooks/telemetry-data-resilience.md G1):
 //   - Parse/encoding poison → Ack and drop immediately (never redeliver).
 //   - Transient downstream failures (VM 5xx, PG down) → NakWithDelay
 //     with backoff; do NOT treat delivery count as "poison".

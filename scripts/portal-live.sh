@@ -2,8 +2,8 @@
 # portal-live.sh — one-shot live stack for E3.5 ops portal (dev only).
 #
 # Brings up:
-#   1) seed-ext + cios-core   (default: sibling cios-m3model-wt)
-#   2) cios-apigw no-auth     (default: sibling cios-m3auth-wt for twins routes)
+#   1) seed-ext + cios-core   (default: this repository)
+#   2) cios-apigw no-auth     (default: this repository)
 #   3) ops-portal MOCK_GATEWAY=0 → apigw
 #
 # Usage:
@@ -13,16 +13,12 @@
 # Env overrides:
 #   MODEL_ROOT  AUTH_ROOT  UI_ROOT
 #   CORE_PORT=8090  APIGW_PORT=8089  PORTAL_PORT=3210
-#   SCENE_DIR   (default: $MODEL_ROOT/artifacts/scene if present, else $UI_ROOT/assets/usd/pod)
 #   STORE=/tmp/cios-portal-live-store.json
 set -euo pipefail
 
 UI_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-# Sibling worktrees (layout from monorepo root)
-DEFAULT_MODEL="$(cd "$UI_ROOT/../cios-m3model-wt" 2>/dev/null && pwd || true)"
-DEFAULT_AUTH="$(cd "$UI_ROOT/../cios-m3auth-wt" 2>/dev/null && pwd || true)"
-MODEL_ROOT="${MODEL_ROOT:-${DEFAULT_MODEL:-$UI_ROOT}}"
-AUTH_ROOT="${AUTH_ROOT:-${DEFAULT_AUTH:-$UI_ROOT}}"
+MODEL_ROOT="${MODEL_ROOT:-$UI_ROOT}"
+AUTH_ROOT="${AUTH_ROOT:-$UI_ROOT}"
 
 CORE_PORT="${CORE_PORT:-8090}"
 APIGW_PORT="${APIGW_PORT:-8089}"
@@ -33,27 +29,16 @@ CHECK_ONLY=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --check-only) CHECK_ONLY=1; shift ;;
-    -h|--help) sed -n '2,24p' "$0"; exit 0 ;;
+    -h|--help) sed -n '2,17p' "$0"; exit 0 ;;
     *) echo "unknown arg: $1" >&2; exit 2 ;;
   esac
 done
 
-export PATH="/opt/homebrew/opt/node@22/bin:${PATH:-}"
-
-# Prefer portal-solidified scene (valid triangle boxes) over raw scene-engine glb.
-if [[ -z "${SCENE_DIR:-}" ]]; then
-  if [[ -f "$UI_ROOT/artifacts/scene/sgp01.glb" ]]; then
-    SCENE_DIR="$UI_ROOT/artifacts/scene"
-  elif [[ -d "${MODEL_ROOT}/artifacts/scene" ]]; then
-    SCENE_DIR="$MODEL_ROOT/artifacts/scene"
-  else
-    SCENE_DIR="$UI_ROOT/assets/usd/pod"
-  fi
-fi
+[[ -d /opt/homebrew/opt/node@22/bin ]] && export PATH="/opt/homebrew/opt/node@22/bin:${PATH:-}"
 
 LOG_DIR="${UI_ROOT}/.portal-live-logs"
 PID_DIR="${UI_ROOT}/.portal-live-pids"
-mkdir -p "$LOG_DIR" "$PID_DIR" "$UI_ROOT/bin" "$SCENE_DIR"
+mkdir -p "$LOG_DIR" "$PID_DIR" "$UI_ROOT/bin"
 
 cleanup() {
   local rc=$?
@@ -84,7 +69,6 @@ echo "== portal-live =="
 echo "  UI_ROOT=$UI_ROOT"
 echo "  MODEL_ROOT=$MODEL_ROOT"
 echo "  AUTH_ROOT=$AUTH_ROOT"
-echo "  SCENE_DIR=$SCENE_DIR"
 echo "  core=:$CORE_PORT apigw=:$APIGW_PORT portal=:$PORTAL_PORT"
 
 # --- 1) seed + core (prefer model tree for seed-ext) ---
@@ -129,12 +113,9 @@ done
 [[ "$CORE_OK" = 1 ]] || { echo "core not ready; see $LOG_DIR/core.log" >&2; exit 3; }
 echo "    core up"
 
-# --- 2) apigw (prefer auth tree for full twins routes) ---
-echo "==> [3/4] cios-apigw :$APIGW_PORT scene=$SCENE_DIR"
+# --- 2) apigw ---
+echo "==> [3/4] cios-apigw :$APIGW_PORT"
 APIGW_BUILD="$AUTH_ROOT"
-if [[ ! -f "$APIGW_BUILD/pkg/apigw/twins.go" ]]; then
-  APIGW_BUILD="$UI_ROOT"
-fi
 (
   cd "$APIGW_BUILD"
   CGO_ENABLED=0 go build -tags lab -o "$UI_ROOT/bin/cios-apigw" ./cmd/cios-apigw
@@ -142,7 +123,6 @@ fi
 CIOS_APIGW_DEV_NO_AUTH=1 \
 CIOS_APIGW_LISTEN="127.0.0.1:${APIGW_PORT}" \
 CIOS_APIGW_UPSTREAM="http://127.0.0.1:${CORE_PORT}" \
-CIOS_APIGW_SCENE_DIR="$SCENE_DIR" \
   "$UI_ROOT/bin/cios-apigw" >"$LOG_DIR/apigw.log" 2>&1 &
 echo $! >"$PID_DIR/apigw.pid"
 
@@ -158,7 +138,7 @@ echo "    apigw up"
 
 # --- 3) portal ---
 echo "==> [4/4] ops-portal :$PORTAL_PORT (MOCK_GATEWAY=0)"
-export PATH="/opt/homebrew/opt/node@22/bin:${PATH}"
+[[ -d /opt/homebrew/opt/node@22/bin ]] && export PATH="/opt/homebrew/opt/node@22/bin:${PATH}"
 (
   cd "$UI_ROOT/web"
   if [[ ! -f apps/ops-portal/build/server/index.js ]]; then
@@ -198,7 +178,6 @@ echo
 echo "READY"
 echo "  portal  http://127.0.0.1:${PORTAL_PORT}/"
 echo "  assets  http://127.0.0.1:${PORTAL_PORT}/assets"
-echo "  3d      http://127.0.0.1:${PORTAL_PORT}/noc/3d?site=sgp01"
 echo "  apigw   http://127.0.0.1:${APIGW_PORT}/healthz"
 echo "  core    http://127.0.0.1:${CORE_PORT}/v1/assets"
 echo "  logs    $LOG_DIR"

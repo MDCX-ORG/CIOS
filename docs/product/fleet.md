@@ -89,5 +89,4 @@ Fleet services are **not path-listed as Commercial-only** in the current open-co
 |-----|------|
 | [`../ops/fleet-install.md`](../ops/fleet-install.md) | Install plan & prerequisites |
 | [`edge.md`](edge.md) | Per-site product (implemented) |
-| [`../M3-COMPLETION-PLAN.md`](../M3-COMPLETION-PLAN.md) | E3.7 / P67x table |
 | `protocol/spec-006-architecture.md` §1.2 | Normative module list |

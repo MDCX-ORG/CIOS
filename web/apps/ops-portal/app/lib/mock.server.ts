@@ -87,7 +87,7 @@ const MOCK_TICKETS: MockTicket[] = [
     resource_version: 3,
   },
   {
-    // PRMT-233: predict-scanner fixture (core/predict.go openPredictTicket).
+    // Sample predictive-maintenance ticket fixture (ticket list rendering only).
     id: "tk_AAAAAAAAAAAA0005",
     alarm_id: "predict:site01.pod000.cdu000",
     asset_path: "site01.pod000.cdu000",
@@ -902,157 +902,6 @@ export async function mockGet<T = unknown>(path: string): Promise<T> {
     } as T;
   }
   if (
-    path === "/api/capacity/forecast" ||
-    path.startsWith("/api/capacity/forecast?")
-  ) {
-    // P741: capacity forecast fixture (linear_growth, power+cooling).
-    const qIdx = path.indexOf("?");
-    const qs = new URLSearchParams(qIdx >= 0 ? path.slice(qIdx + 1) : "");
-    const g = Number(qs.get("growth_pct_per_year") ?? "0");
-    const window = qs.get("window") ?? "7d";
-    const mk = (days: number, horizon: string) => {
-      const factor = Math.pow(1 + g / 100, days / 365);
-      const powerBase = 14500;
-      const coolBase = 410;
-      return {
-        horizon,
-        days,
-        dimensions: [
-          {
-            dimension: "power",
-            status: "ok",
-            unit: "W",
-            rated: 24000,
-            measured_baseline: powerBase,
-            forecast_measured: powerBase * factor,
-            forecast_remaining: 24000 - powerBase * factor,
-            degraded: false,
-          },
-          {
-            dimension: "cooling",
-            status: "ok",
-            unit: "kw",
-            rated: 600,
-            measured_baseline: coolBase,
-            forecast_measured: coolBase * factor,
-            forecast_remaining: 600 - coolBase * factor,
-            degraded: false,
-          },
-          {
-            dimension: "gpu",
-            status: "not_implemented",
-            note: "GPU capacity forecast gated on P761 DCGM (hardware)",
-          },
-        ],
-      };
-    };
-    return {
-      method: "linear_growth",
-      growth_pct_per_year: Number.isFinite(g) ? g : 0,
-      baseline_window: window,
-      horizons: [mk(30, "30d"), mk(90, "90d")],
-      notes: [
-        "P741 mock forecast",
-        "growth_pct_per_year=0 holds measured flat (default)",
-      ],
-    } as T;
-  }
-  if (path === "/api/capacity" || path.startsWith("/api/capacity?")) {
-    // PRMT-157: capacity headroom (rated − measured P95) per
-    // dimension (spec-008 §10). Fixture rows mirror
-    // core.capacityAssetEntry JSON shape (core/capacity.go L82-91).
-    // Power + cooling implemented; rack returns a `not_implemented`
-    // stub matching the wire shape so the loader's flatten loop is
-    // exercised without inventing fields.
-    const qIdx = path.indexOf("?");
-    const qs = new URLSearchParams(qIdx >= 0 ? path.slice(qIdx + 1) : "");
-    const window = qs.get("window") ?? "7d";
-    return {
-      window,
-      dimensions: [
-        {
-          dimension: "power",
-          status: "ok",
-          unit: "W",
-          rated: 24000,
-          measured_p95: 14500,
-          remaining: 9500,
-          degraded: false,
-          // Pod-level paths (site.podNNN) so default portal scope=pods shows rows.
-          by_asset: [
-            {
-              path: "site01.pod000",
-              lifecycle: "active",
-              rated: 15000,
-              measured_p95: 9300,
-              remaining: 5700,
-              degraded: false,
-            },
-            {
-              path: "site02.pod001",
-              lifecycle: "active",
-              rated: 9000,
-              measured_p95: 5200,
-              remaining: 3800,
-              degraded: false,
-            },
-          ],
-          missing_rated: 0,
-        },
-        {
-          dimension: "cooling",
-          status: "ok",
-          unit: "kw",
-          rated: 600,
-          measured_p95: 410,
-          remaining: 190,
-          degraded: false,
-          by_asset: [
-            {
-              path: "site01.pod000",
-              lifecycle: "active",
-              rated: 350,
-              measured_p95: 240,
-              remaining: 110,
-              degraded: false,
-            },
-            {
-              path: "site02.pod001",
-              lifecycle: "active",
-              rated: 250,
-              measured_p95: 170,
-              remaining: 80,
-              degraded: false,
-            },
-          ],
-          missing_rated: 0,
-        },
-        {
-          dimension: "rack",
-          status: "not_implemented",
-          unit: "watt",
-          rated: null,
-          measured_p95: null,
-          remaining: null,
-          degraded: false,
-          by_asset: [],
-          missing_rated: 0,
-        },
-        {
-          dimension: "gpu",
-          status: "not_implemented",
-          unit: "watt",
-          rated: null,
-          measured_p95: null,
-          remaining: null,
-          degraded: false,
-          by_asset: [],
-          missing_rated: 0,
-        },
-      ],
-    } as T;
-  }
-  if (
     path === "/api/maintenance/upcoming" ||
     path.startsWith("/api/maintenance/upcoming?")
   ) {
@@ -1240,22 +1089,6 @@ export async function mockGet<T = unknown>(path: string): Promise<T> {
 
     return { items: all } as T;
   }
-  if (path === "/api/capacity/metrics") {
-    // PRMT-157: Prometheus text exposition stub (spec-008 §10). The
-    // route page does not call this path today (Phase A is JSON-only),
-    // but the seam mirrors it so the Gateway handler reference exists
-    // for the M2 P521 scraper integration. Hand-built text shape is
-    // an intentional subset of core.writePowerExposition output.
-    return [
-      "# HELP cios_capacity_rated_watt Rated power capacity (W) from CMDB.",
-      "# TYPE cios_capacity_rated_watt gauge",
-      "cios_capacity_rated_watt 24000",
-      "# HELP cios_capacity_remaining_watt Remaining power headroom (rated - measured p95).",
-      "# TYPE cios_capacity_remaining_watt gauge",
-      'cios_capacity_remaining_watt{asset_path="site01.pod000.cdu000"} 5700',
-      'cios_capacity_remaining_watt{asset_path="site02.pod001.cdu001"} 3800',
-    ].join("\n") as T;
-  }
   if (path.startsWith("/api/metrics/query_range")) {
     const pts = (b: number): [number, string][] => [
       [1700000000, String(b)],
@@ -1314,91 +1147,6 @@ export async function mockGet<T = unknown>(path: string): Promise<T> {
             value: [1700000000, "0.62"],
           },
         ],
-      },
-    } as T;
-  }
-  if (path === "/api/twins/scene" || path.startsWith("/api/twins/scene?")) {
-    // PRMT-152: twins-v0 scene descriptor fixture (E3.5/3.6a bridge,
-    // Phase B render base). Shape pinned to PRMT-169 §4.1 / api-client
-    // `SceneDescriptor`. The live gateway route is gated on PRMT-170
-    // (feature/m3-auth companion); this mock is the only path exercised
-    // by PRMT-152 acceptance.
-    //
-    // MOCK_GATEWAY=1 FIXTURE-ONLY marker: `site02.pod001.cdu001` is
-    // seeded with `access: "ghost"` (L97) so the R2 outline render
-    // path is exercised end-to-end. The live Scene Engine emits
-    // `full` only (L91/L97; R2 dormant on the live scene). The
-    // renderer must NOT derive out-of-scope status from any other
-    // source (spec-009 §3.3 red line).
-    return {
-      contract: "twins-v0",
-      site: "site01",
-      geometry: { format: "gltf-binary", file: "site01.glb" },
-      nodes: [
-        {
-          path: "site01",
-          type: "site",
-          gltf_node: "site01",
-          model: "placeholder",
-          access: "full",
-        },
-        {
-          path: "site01.pod000",
-          type: "pod",
-          gltf_node: "site01.pod000",
-          model: "placeholder",
-          access: "full",
-        },
-        {
-          path: "site01.pod000.cdu000",
-          type: "cdu",
-          gltf_node: "site01.pod000.cdu000",
-          model: "ac45",
-          access: "full",
-        },
-        {
-          path: "site01.pod000.node0",
-          type: "node",
-          gltf_node: "site01.pod000.node0",
-          model: "placeholder",
-          access: "full",
-        },
-        // FIXTURE-ONLY: L97 ghost for R2 outline path (MOCK_GATEWAY=1).
-        {
-          path: "site02.pod001.cdu001",
-          type: "cdu",
-          gltf_node: "site02.pod001.cdu001",
-          model: "dc45",
-          access: "ghost",
-        },
-      ],
-      edges: [
-        {
-          from: "site01.pod000",
-          to: "site01.pod000.cdu000",
-          rel: "feeds",
-          rated_kw: 200,
-        },
-        {
-          from: "site01.pod000.cdu000",
-          to: "site01.pod000.node0",
-          rel: "cools",
-          rated_kw: 150,
-        },
-      ],
-      bindings: [
-        {
-          path: "site01.pod000.cdu000",
-          points: ["supply.flow", "return.flow", "inlet.temp", "outlet.temp"],
-        },
-        {
-          path: "site01.pod000.node0",
-          points: ["power", "utilization", "inlet.temp"],
-        },
-      ],
-      visual: {
-        authority: "spec-009 §4.1",
-        note: "visual_state = v0.0.1 (L92). No colors in the wire.",
       },
     } as T;
   }
